@@ -124,9 +124,9 @@ def show_report(result, news_by_id: dict) -> None:
             for i in ids:
                 item = news_by_id.get(i)
                 if item:
-                    st.caption(f"✅ `{i}` · {item['source']}, {item['published'][:10]} · {item['headline']}")
+                    st.caption(f"valid · `{i}` · {item['source']}, {item['published'][:10]} · {item['headline']}")
                 else:
-                    st.caption(f"❌ `{i}` · invalid citation: never retrieved, or published after the close")
+                    st.caption(f"INVALID · `{i}` · never retrieved, or published after the close")
             if bad:
                 st.warning(f"{len(bad)} of {len(ids)} citations are invalid.")
 

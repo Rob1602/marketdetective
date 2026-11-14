@@ -3,8 +3,8 @@
 **A local LLM agent that investigates unusual stock price moves.**
 
 Ask *"Why did NVIDIA move on 2026-11-09?"* and the system measures how unusual the move was,
-decomposes it into market, sector and company-specific components, searches a news archive for
-candidate causes, and writes a report that separates **evidence-backed causes from hypotheses**.
+splits it into market, sector and company-specific components, searches a news archive for
+candidate causes, and writes a report that keeps evidence-backed causes separate from hypotheses.
 
 Everything runs locally and for free: Qwen3 8B via [Ollama](https://ollama.com), no paid API.
 
@@ -19,48 +19,48 @@ Everything runs locally and for free: Qwen3 8B via [Ollama](https://ollama.com),
 
 ## Key finding
 
-The project's purpose is not only to build the agent, but to measure whether the agentic design is
-worth its cost. It is compared against a **RAG baseline**: same model, same archive, same questions,
-but no tools: one retrieval, documents pasted into the prompt, one answer.
+The point of the project is not only to build the agent, but to test whether the agentic design is
+worth its cost. It is compared against a RAG baseline: same model, same archive, same questions,
+but no tools. The baseline does one retrieval, pastes the documents into the prompt and answers.
 
-> **On causes, the agentic design bought almost nothing**: 7 of 9 events against the baseline's 6,
-> at **4.8× the tokens** and **1.9× the wall-clock time**.
+> On identifying causes, the agent gained very little: 7 of 9 events against the baseline's 6, at
+> 4.8 times the tokens and 1.9 times the wall-clock time.
 >
-> **What it bought is the ability to know when there is nothing to explain.** On a control day with
-> no anomalous move, the agent said so and proved it. The baseline invented three causes and called
-> the day "unusual".
+> What it gained is the ability to recognise when there is nothing to explain. On a control day
+> with no anomalous move, the agent said so and showed the figures. The baseline listed three
+> causes and described the day as unusual.
 
-Three findings matter more than the aggregate numbers.
+Three results are more informative than the totals.
 
-**Borrowed figures.** The baseline, having nothing to measure with, takes numbers from the articles
-it reads. One report stated the stock *"fell over 5% pre-market and reached its most oversold level
-since 2019"*, a claim lifted from an article about a **different trading day**. Over nine events it
-made 11 such unverified numeric claims against the agent's 1. The agent structurally cannot do this:
-every figure in its report is injected from the event study, never parsed from model output.
+**Borrowed figures.** The baseline has no way to measure anything, so it takes numbers from the
+articles it reads. One report stated that the stock *"fell over 5% pre-market and reached its most
+oversold level since 2019"*. That claim comes from an article about a different trading day. Across
+nine events the baseline made 11 unverified numeric claims against the agent's 1. The agent cannot
+do this: every figure in its report is inserted from the event study and never read from the
+model's own text.
 
-**The control day.** 2026-07-15 was included deliberately: NVDA rose 0.33% in line with the market,
-abnormal return +0.01%, t = 0.00. The two systems diverged completely.
+**The control day.** 2026-07-15 was included on purpose. NVDA rose 0.33% in line with the market,
+abnormal return +0.01%, t = 0.00. The two systems answered very differently.
 
 > **Agent:** *"The +0.33% return was entirely explained by broader market (SPY: +0.70%) and sector
 > (SOXX: −0.24%) movements. No company-specific news or events were found to explain the move. The
 > abnormal return (+0.01%) was statistically insignificant (p-value = 0.9973)."*
 >
 > **Baseline:** *"likely driven by analyst upgrades, confirmed business expansions (e.g., H200 chip
-> shipments to China), and optimism about NVIDIA's AI leadership. The move appears **unusual**..."*
+> shipments to China), and optimism about NVIDIA's AI leadership. The move appears unusual..."*
 
-The baseline had no way to know that +0.33% was ordinary, so it did what an LLM asked *why* a stock
-moved will do: it found a reason. The agent declined, and declined quantitatively. This is the
-clearest justification for the statistical tools in the loop, and it is only visible because the
-control case exists. No amount of accuracy on real events would have surfaced it.
+The baseline had no way to know that +0.33% was an ordinary day, so it looked for a reason and
+found one. The agent had the statistics and used them to say that no explanation was needed. This
+is the clearest argument for giving the model statistical tools, and it is visible only because the
+control case was included. Accuracy on real events alone would not have shown it.
 
-**A required field invites fabrication.** The agent was not clean either. Its two causes on the
-control day were right (*"Market-driven movement"*, *"Sector-wide dynamics"*), but the output
-schema requires an `evidence_ids` list on every supported cause, and it had no news to cite. It
-produced `MARKET_20260715_001`, `SPY_20260715_002`, `SOXX_20260715_003`: plausible-looking
-identifiers that do not exist. The citation checker rejected all three, the only fabricated
-citations in the experiment. The analysis was sound and the evidence field was invented, because
-the schema left no way to say *there is no evidence*. A field a model must fill is a field a model
-will fill.
+**Required fields get filled.** The agent was not faultless either. Its two causes on the control
+day were correct (*"Market-driven movement"*, *"Sector-wide dynamics"*), but the output schema
+requires an `evidence_ids` list on every supported cause and there was no news to cite. It produced
+`MARKET_20260715_001`, `SPY_20260715_002` and `SOXX_20260715_003`, identifiers that look plausible
+but do not exist. The citation checker rejected all three. They are the only fabricated citations in
+the experiment. The analysis was correct and the evidence field was invented, because the schema
+offered no way to state that there was no evidence.
 
 ---
 
@@ -85,26 +85,26 @@ Per event:
 
 | Event | Move | Cause (ground truth) | Agent | Baseline |
 |---|---|---|---|---|
-| 2026-02-02 | −2.9% | $100bn OpenAI investment reported paused | ❌ | ❌ |
-| 2026-04-27 | +3.9% | *No discrete catalyst*: AI build-out momentum, bullish analyst note | ✅ | ✅ |
-| 2026-04-30 | −4.7% | Competition from hyperscalers' custom AI chips | ✅ | ✅ |
-| 2026-06-01 | +6.1% | Computex: entry into the PC chip market (RTX Spark, Vera CPU) | ✅ | ✅ |
-| **2026-07-15** | **+0.3%, t = 0.00** | **Control: nothing to explain** | ✅ *but 3 fabricated citation IDs* | ❌ *invented causes, called it "unusual"* |
-| 2026-07-27 | −5.1% | Circular-financing fears over the $250bn OpenAI backstop | ❌ | ✅ |
-| 2026-08-27 | +8.4% | Q2 earnings beat and strong guidance | ✅ | ✅ |
-| 2026-11-04 | −3.2% | *No clean attribution*: China chip shortfall dominates coverage, post-election selloff is the only explicit link | ✅ | ❌ |
-| 2026-11-09 | −5.3% *while the market rose 4.2%* | Board investigation into CEO Jensen Huang | ✅ | ✅ |
+| 2026-02-02 | −2.9% | $100bn OpenAI investment reported paused | no | no |
+| 2026-04-27 | +3.9% | *No discrete catalyst*: AI build-out momentum, bullish analyst note | yes | yes |
+| 2026-04-30 | −4.7% | Competition from hyperscalers' custom AI chips | yes | yes |
+| 2026-06-01 | +6.1% | Computex: entry into the PC chip market (RTX Spark, Vera CPU) | yes | yes |
+| **2026-07-15** | **+0.3%, t = 0.00** | **Control: nothing to explain** | yes *(but 3 fabricated citation IDs)* | no *(invented causes, called it "unusual")* |
+| 2026-07-27 | −5.1% | Circular-financing fears over the $250bn OpenAI backstop | no | yes |
+| 2026-08-27 | +8.4% | Q2 earnings beat and strong guidance | yes | yes |
+| 2026-11-04 | −3.2% | *No clean attribution*: China chip shortfall dominates coverage, post-election selloff is the only explicit link | yes | no |
+| 2026-11-09 | −5.3% *while the market rose 4.2%* | Board investigation into CEO Jensen Huang | yes | yes |
 
-The agent's two misses (2026-02-02, 2026-07-27) share a shape: the cause was a financial or
-structural story rather than a discrete corporate event. Its searches start from conventional
-categories such as earnings, products and regulation, and do not reach that kind of narrative. This is a
-limitation of the prompt, not of the retriever: the relevant articles were in the archive.
+The agent missed 2026-02-02 and 2026-07-27. In both cases the cause was a financial or structural
+story rather than a single corporate event. The agent's searches start from conventional categories
+such as earnings, products and regulation, and do not reach that kind of story. This is a limit of
+the prompt rather than of the retriever: the relevant articles were in the archive.
 
-**Reading:** *unverified numeric claim* = a percentage stated in the answer matching no value
-produced by the event study (0.5 pp tolerance). For the baseline, which computes nothing, every
-percentage it states falls into this category by construction, which is the point of the
-comparison. *Correct cause* is a whole-word match against the ground truth's key terms: a screen,
-not a judge, so every run was also read by hand.
+**Reading the tables.** An *unverified numeric claim* is a percentage in the answer that matches no
+value produced by the event study, with a 0.5 pp tolerance. The baseline computes nothing, so every
+percentage it states falls into that column, which is the point of the comparison. *Correct cause*
+is a whole-word match against the ground truth's key terms. It is a screen rather than a judgment,
+so every run was also read by hand.
 
 ---
 
@@ -119,22 +119,22 @@ R_stock = α + β_m · R_market + β_s · (R_sector − R_market) + ε
 ```
 
 The sector factor is expressed in excess of the market, so the two factors are less collinear and
-the event-day return decomposes into interpretable parts:
+the event-day return splits into parts that can be read separately:
 
 **return = α + market + sector + company-specific (abnormal return)**
 
-The move is flagged anomalous when |t| of the abnormal return exceeds 2. For NVDA on 2026-11-09:
+The move is flagged as anomalous when |t| of the abnormal return exceeds 2. For NVDA on 2026-11-09:
 −5.32% = +4.24% (market) + 0.80% (sector) − 10.34% (company-specific), t = −5.75, p < 0.001.
 
 ### 2. No look-ahead, enforced by tests
 
-- α and β are estimated **only** on data preceding the event window. A test mutates all data from the
-  event onward by a factor of 5 and asserts the estimates do not change.
-- The retriever returns **only** news published before the 16:00 New York close of the event day.
-  A test places an article 30 minutes after the close and asserts it is never retrieved.
+- α and β are estimated only on data preceding the event window. A test multiplies all data from the
+  event onward by 5 and checks that the estimates do not change.
+- The retriever returns only news published before the 16:00 New York close of the event day. A test
+  places an article 30 minutes after the close and checks that it is never retrieved.
 
-This matters: news published *after* a move trivially "explains" it, and an agent allowed to read it
-would score well while learning nothing.
+Both rules matter because news published after a move explains it trivially. An agent allowed to
+read it would score well without having learned anything.
 
 ### 3. Agent vs baseline
 
@@ -145,42 +145,41 @@ would score well while learning nothing.
 | Access to statistics | none | `analyze_event` tool |
 | Steps | 2 | 6–8 |
 
-The agent is a plain tool-calling loop over Ollama's chat API, with no orchestration framework, so every
-step is inspectable. Two tools are exposed: `analyze_event` (the event study) and `search_news`
-(date-filtered retrieval).
+The agent is a plain tool-calling loop over Ollama's chat API, with no orchestration framework, so
+every step can be inspected. Two tools are exposed: `analyze_event` (the event study) and
+`search_news` (date-filtered retrieval).
 
 ### 4. Guardrails in code, not in the prompt
 
 The model is not trusted to behave:
 
-- **Numbers** in the final report are injected from the event study, never parsed from model output.
-- **Citations** are verified: each cited ID must correspond to an article the model actually received
-  *and* published before the close. Violations are reported as `Invalid citations`.
+- **Numbers** in the final report are inserted from the event study, never read from model output.
+- **Citations** are verified. Each cited ID must correspond to an article the model actually
+  received and published before the close. Violations are reported as `Invalid citations`.
 - **Output shape** is enforced with a Pydantic JSON schema, so supported causes and hypotheses are
-  always separated.
+  always kept apart.
 
 ---
 
 ## Limitations
 
-- **9 events, 1 ticker.** A pilot, not an accuracy claim: 7/9 and 6/9 are indistinguishable at this
-  sample size, and the one control day carries more weight than it should. The natural next step is
-  30+ events across several tickers and sectors, with several control days.
-- **Cause matching is lexical, and had to be audited twice.** The automatic check looks for key
-  terms from the ground truth; it is a screen, not a judge, and every run was also read by hand.
-  Version 1 matched substrings and scored the control case as passed for both systems, because `no`
-  occurs inside `not` and `announced`. Version 2 used whole words and scored it as failed for both.
-  Only reading the two reports revealed the truth: the agent had answered correctly in wording the
-  key terms did not cover (*"no company-specific news"*, *"statistically insignificant"*), so the
-  terms were extended. Both corrections are in the commit history. A lexical screen is a
-  measurement instrument and needs calibrating like one.
-- **Ground truth is my own reading** of the retrieved articles, not an independent source. Two of
-  the nine events (2026-04-27, 2026-11-04) have no clean attribution and are documented as such:
-  the press reports a dominant story without ever tying the price move to it.
-- **News coverage is uneven.** Finnhub's free tier caps results per request (worked around by
-  fetching one day at a time) and goes back about a year, so events must be recent.
-- **Headline + summary only**, not full article text, which limits how specific a cause can get.
-- **Single model.** Results may differ with a larger local model or a frontier API model.
+- **9 events, 1 ticker.** This is a pilot, not an accuracy claim. 7/9 and 6/9 cannot be told apart
+  at this sample size, and a single control day carries more weight than it should. The next step is
+  30 or more events across several tickers and sectors, with several control days.
+- **Cause matching is lexical and had to be corrected twice.** The automatic check looks for key
+  terms from the ground truth. Version 1 matched substrings and scored the control case as passed
+  for both systems, because `no` occurs inside `not` and `announced`. Version 2 matched whole words
+  and scored it as failed for both. Reading the two reports showed that the agent had in fact
+  answered correctly, in wording the key terms did not cover (*"no company-specific news"*,
+  *"statistically insignificant"*), so the terms were extended. Both corrections are in the commit
+  history. The lexical check is a measurement tool and needs checking like any other.
+- **The ground truth is my own reading** of the retrieved articles, not an independent source. Two
+  of the nine events (2026-04-27, 2026-11-04) have no clean attribution and are recorded as such:
+  the press reports a dominant story without tying the price move to it.
+- **News coverage is uneven.** Finnhub's free tier caps results per request, which is worked around
+  by fetching one day at a time, and goes back about a year, so events have to be recent.
+- **Headlines and summaries only**, not full article text, which limits how specific a cause can be.
+- **One model.** Results may differ with a larger local model or a commercial API model.
 
 ---
 
@@ -244,7 +243,3 @@ tests/                      47 tests on synthetic data and a scripted LLM
 ## Stack
 
 Python · pandas · NumPy · SciPy · Pydantic · Streamlit · Ollama (Qwen3 8B, nomic-embed-text) · yfinance · Finnhub
-
-## License
-
-MIT
