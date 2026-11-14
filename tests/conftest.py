@@ -1,4 +1,4 @@
-"""Dati sintetici con parametri noti: permettono di verificare che le stime siano corrette."""
+"""Synthetic data with known parameters, so the estimates can be checked against the truth."""
 
 import numpy as np
 import pandas as pd
@@ -9,7 +9,7 @@ TRUE_BETA_M = 1.4
 TRUE_BETA_S = 0.8
 NOISE = 0.012
 EVENT_DATE = "2024-03-15"
-SHOCK = -0.07  # shock specifico dell'azienda il giorno dell'evento
+SHOCK = -0.07  # company-specific shock on the event day
 
 
 def make_returns(seed: int = 0, n: int = 400, shock: float = SHOCK, market_shock: float = 0.0) -> pd.DataFrame:

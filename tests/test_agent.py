@@ -19,7 +19,7 @@ def news(i, when, headline):
 
 
 class FakeStore:
-    """Prezzi sintetici: lo stesso generatore dei test statistici, trasformato in prezzi."""
+    """Synthetic prices: the generator used by the statistics tests, turned into price levels."""
 
     def get_many(self, symbols, start, end=None):
         r = make_returns()
@@ -48,7 +48,7 @@ def text(content):
 
 
 class ScriptedChat:
-    """Un LLM finto che risponde con una sequenza prestabilita e registra cosa riceve."""
+    """A fake LLM that replies with a fixed sequence and records what it receives."""
 
     def __init__(self, responses):
         self.responses, self.calls = list(responses), []
@@ -94,7 +94,7 @@ def test_agent_loop_and_citation_checks(tmp_path):
     assert [s.name for s in res.steps if s.kind == "tool"] == ["analyze_event", "search_news"]
     assert res.numbers["is_anomalous"] is True
     assert res.citations_valid == ["n1"]
-    assert res.citations_invalid == ["n2", "n999"]        # n2 dopo la chiusura, n999 inventata
+    assert res.citations_invalid == ["n2", "n999"]        # n2 is after the close, n999 does not exist
     assert res.tokens == (400, 60)
     assert "tools" in chat.calls[0] and "format" in chat.calls[-1]
     md = res.to_markdown()
@@ -113,12 +113,12 @@ def test_rag_baseline_has_no_tools_and_no_numbers(tmp_path):
     res = MarketDetective(toolbox(tmp_path), chat=chat, verbose=False).rag_baseline("NVDA", DATE)
     assert res.numbers is None
     assert "tools" not in chat.calls[0]
-    assert "n2" not in chat.calls[0]["messages"][1]["content"]   # look-ahead escluso anche qui
+    assert "n2" not in chat.calls[0]["messages"][1]["content"]   # look-ahead excluded here too
     assert res.citations_valid == ["n1"]
 
 
 def test_log_callback_receives_each_step(tmp_path):
-    """Serve all'interfaccia Streamlit per mostrare i passi mentre accadono."""
+    """Used by the Streamlit interface to show the steps as they happen."""
     lines = []
     chat = ScriptedChat([call("analyze_event", ticker="NVDA", date=EVENT_DATE),
                          call("search_news", ticker="NVDA", date=DATE, query="china"),
@@ -127,7 +127,7 @@ def test_log_callback_receives_each_step(tmp_path):
     assert any(line.startswith("→ analyze_event") for line in lines)
     assert any("search_news" in line for line in lines)
     assert lines[-1].startswith("→ writing the report")
-    assert not any(line.startswith(" ") for line in lines)   # già ripulite per l'interfaccia
+    assert not any(line.startswith(" ") for line in lines)   # already stripped for the interface
 
 
 def test_bad_json_is_reported_not_raised(tmp_path):

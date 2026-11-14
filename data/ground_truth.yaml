@@ -1,9 +1,9 @@
-# La causa vera di ogni evento, ricavata leggendo i titoli pubblicati PRIMA della chiusura
-# di borsa del giorno dell'evento (data/review/headlines.txt).
-# Serve per valutare le risposte dell'agente e della baseline RAG.
+# The ground truth cause of each event, established by reading the headlines published BEFORE
+# the market close of the event day (data/review/headlines.txt).
+# Used to score the answers from the agent and from the RAG baseline.
 #
-# key_terms: gruppi di sinonimi. Una risposta è considerata corretta se contiene
-# almeno un termine di OGNI gruppo. Meno gruppi = criterio più indulgente.
+# key_terms: groups of synonyms. An answer counts as correct when it contains at least one term
+# from EVERY group, so fewer groups means a more forgiving check.
 
 events:
 

@@ -1,9 +1,9 @@
-"""Prova il RAG: cerca nell'archivio le notizie più pertinenti per un evento.
+"""Try the RAG: search the archive for the news most relevant to an event.
 
-Esempio:
-    python scripts/search_news.py NVDA 2025-04-03 "perché il titolo è sceso?"
+Example:
+    python scripts/search_news.py NVDA 2026-11-09 "why did the stock fall?"
 
-Mostra solo notizie pubblicate prima della chiusura di borsa del giorno dell'evento.
+Only news published before the market close of the event day is returned.
 """
 
 from __future__ import annotations
@@ -20,7 +20,7 @@ from marketdetective.rag import NewsIndex, OllamaEmbedder, market_close_utc  # n
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="Ricerca semantica nell'archivio notizie")
+    ap = argparse.ArgumentParser(description="Semantic search over the news archive")
     ap.add_argument("ticker")
     ap.add_argument("date")
     ap.add_argument("query")
@@ -29,12 +29,12 @@ def main() -> None:
     cfg = load_config()
     index = NewsIndex(NewsArchive(cfg.news_dir), OllamaEmbedder(cfg.embedding_model))
     n = index.build()
-    print(f"Archivio: {len(index.items)} notizie ({n} nuovi embedding calcolati)")
-    print(f"Solo notizie fino a {market_close_utc(args.date)} (chiusura di borsa)\n")
+    print(f"Archive: {len(index.items)} news items ({n} new embeddings computed)")
+    print(f"Only news published before {market_close_utc(args.date)} (market close)\n")
 
     hits = index.search_event(args.query, cfg.ticker(args.ticker).symbol, args.date, k=cfg.top_k)
     if not hits:
-        print("Nessuna notizia nell'archivio per questo titolo e periodo.")
+        print("No news in the archive for this ticker and period.")
     for h in hits:
         print(f"{h.score:.3f}  {h.item.citation()}")
         if h.item.summary:

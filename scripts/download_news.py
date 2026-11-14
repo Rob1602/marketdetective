@@ -1,13 +1,13 @@
-"""Scarica da Finnhub le notizie intorno a uno o più eventi e le salva nell'archivio locale.
+"""Download Finnhub news around one or more events and store it in the local archive.
 
-Esempi:
+Examples:
     python scripts/download_news.py NVDA 2026-11-09
     python scripts/download_news.py NVDA 2026-11-09 2026-04-30 2026-08-27
 
-Per ogni evento crea anche un file da aprire con Excel o Numbers:
+For each event it also writes a spreadsheet file:
     data/review/NVDA_2026-11-09.csv
-con tutte le notizie e una colonna che dice se il modello potrà vederle.
-Leggendolo decidi la causa vera dell'evento e la scrivi in data/ground_truth.yaml.
+listing every news item and whether the model is allowed to see it. Reading it is how the ground
+truth in data/ground_truth.yaml is decided.
 """
 
 from __future__ import annotations
@@ -25,9 +25,9 @@ from marketdetective.rag import market_close_utc  # noqa: E402
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="Scarica notizie Finnhub per uno o più eventi")
+    ap = argparse.ArgumentParser(description="Download Finnhub news for one or more events")
     ap.add_argument("ticker")
-    ap.add_argument("dates", nargs="+", help="date degli eventi, formato AAAA-MM-GG")
+    ap.add_argument("dates", nargs="+", help="event dates, format YYYY-MM-DD")
     args = ap.parse_args()
 
     cfg = load_config()
@@ -39,14 +39,14 @@ def main() -> None:
     review_dir.mkdir(parents=True, exist_ok=True)
 
     for date in args.dates:
-        print(f"\n=== {ticker} {date}: scarico un giorno alla volta...")
+        print(f"\n=== {ticker} {date}: downloading one day at a time...")
         rep = download_event_news(client, archive, ticker, date, cfg.news_days_before, cfg.news_days_after)
         for day, n in rep.per_day.items():
-            print(f"    {day}: {n} notizie")
-        print(f"    totale {rep.downloaded}, nuove nell'archivio {rep.added}")
+            print(f"    {day}: {n} news items")
+        print(f"    total {rep.downloaded}, new in the archive {rep.added}")
         if rep.saturated_days:
-            print(f"    Attenzione: {', '.join(rep.saturated_days)} hanno raggiunto il limite di Finnhub, "
-                  "alcune notizie di quei giorni potrebbero mancare.")
+            print(f"    Warning: {', '.join(rep.saturated_days)} hit the Finnhub per-request cap, "
+                  "so some items from those days may be missing.")
 
         start, end = event_news_range(date, cfg.news_days_before, cfg.news_days_after)
         close = market_close_utc(date)
@@ -56,19 +56,19 @@ def main() -> None:
         out = review_dir / f"{ticker}_{date}.csv"
         with open(out, "w", newline="", encoding="utf-8-sig") as f:
             w = csv.writer(f, delimiter=";")
-            w.writerow(["id", "pubblicata_utc", "visibile_al_modello", "fonte", "titolo", "riassunto", "url"])
+            w.writerow(["id", "published_utc", "visible_to_model", "source", "headline", "summary", "url"])
             for it in items:
                 w.writerow([it.id, it.published[:16].replace("T", " "),
-                            "si" if it.published_ts <= close else "no",
+                            "yes" if it.published_ts <= close else "no",
                             it.source, it.headline, it.summary, it.url])
 
         name_words = {ticker.lower(), info.name.lower()}
         about = [it for it in visible if any(w in it.headline.lower() for w in name_words)]
-        print(f"\n    Il modello potrà vedere {len(visible)} notizie (uscite prima della chiusura del {date}).")
-        print(f"    Ultime 15 con '{info.name}' nel titolo:")
+        print(f"\n    The model will see {len(visible)} items, published before the close on {date}.")
+        print(f"    Last 15 with '{info.name}' in the headline:")
         for it in about[-15:]:
             print(f"      {it.published[:16].replace('T', ' ')}  {it.source:<12.12} {it.headline[:95]}")
-        print(f"    Tutte le notizie, anche quelle successive: {out.relative_to(PROJECT_ROOT)}")
+        print(f"    Every item, including later ones: {out.relative_to(PROJECT_ROOT)}")
 
 
 if __name__ == "__main__":

@@ -4,7 +4,7 @@ from marketdetective.data import PriceStore, load_event_prices
 
 
 class FakeDownloader:
-    """Simula yfinance: restituisce prezzi finti e conta le chiamate."""
+    """Stands in for yfinance: returns fake prices and counts the calls."""
 
     def __init__(self):
         self.calls = []

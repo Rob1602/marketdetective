@@ -1,24 +1,24 @@
-"""Layer statistico: rendimenti, volatilità e event study con market model.
+"""Statistics: returns, volatility and an event study based on a market model.
 
-Domanda a cui risponde: "il movimento del titolo nel giorno X è anomalo, e quanto
-dipende dal mercato, dal settore o da qualcosa di specifico dell'azienda?"
+The question it answers: is the stock's move on day X unusual, and how much of it comes from the
+market, from the sector, or from something specific to the company?
 
-Schema temporale (in giorni di borsa, 0 = giorno dell'evento):
+Timeline (trading days, 0 = event day):
 
-    |------ finestra di stima ------|-- gap --|--- finestra evento ---|
-    t0                            t1          -1         0         +1
+    |------ estimation window ------|-- gap --|--- event window ---|
+    t0                            t1          -1        0        +1
 
-Alfa e beta si stimano SOLO sulla finestra di stima, che termina prima della
-finestra evento: nessun dato dell'evento (o successivo) entra nella stima.
+Alpha and beta are estimated ONLY on the estimation window, which ends before the event window, so
+no data from the event or after it enters the estimate.
 
-Modelli disponibili:
+Two models:
 - "market":        R_stock = a + b_m * R_market + e
 - "market_sector": R_stock = a + b_m * R_market + b_s * (R_sector - R_market) + e
-  Il fattore di settore è espresso in eccesso rispetto al mercato, così i due
-  fattori sono meno correlati e i contributi si interpretano separatamente:
-  b_s * (R_sector - R_market) è la parte dovuta al settore *oltre* il mercato.
+  The sector factor is expressed in excess of the market, so the two factors are less correlated
+  and their contributions can be read separately: b_s * (R_sector - R_market) is the part due to
+  the sector beyond the market.
 
-Il rendimento anomalo (AR) è il residuo e: ciò che mercato e settore non spiegano.
+The abnormal return (AR) is the residual e: what market and sector do not explain.
 """
 
 from __future__ import annotations
@@ -34,45 +34,45 @@ from .config import EventStudyParams
 TRADING_DAYS = 252
 
 
-# ---------------------------------------------------------------- rendimenti
+# ------------------------------------------------------------------- returns
 
 def compute_returns(prices: pd.Series | pd.DataFrame, kind: str = "log") -> pd.Series | pd.DataFrame:
-    """Rendimenti giornalieri. 'log' (default) si somma nel tempo; 'simple' è la variazione percentuale."""
+    """Daily returns. 'log' (the default) adds up over time; 'simple' is the percentage change."""
     if kind == "log":
         out = np.log(prices / prices.shift(1))
     elif kind == "simple":
         out = prices.pct_change()
     else:
-        raise ValueError("kind deve essere 'log' o 'simple'")
+        raise ValueError("kind must be 'log' or 'simple'")
     return out.dropna(how="all")
 
 
 def rolling_volatility(returns: pd.Series, window: int = 20, annualize: bool = True) -> pd.Series:
-    """Deviazione standard mobile dei rendimenti, annualizzata con sqrt(252) se richiesto."""
+    """Rolling standard deviation of returns, annualised with sqrt(252) when asked."""
     vol = returns.rolling(window).std()
     return vol * np.sqrt(TRADING_DAYS) if annualize else vol
 
 
-# ------------------------------------------------------------ posizionamento
+# ---------------------------------------------------------------- positioning
 
 def locate_event(index: pd.DatetimeIndex, event_date) -> int:
-    """Posizione del giorno dell'evento nell'indice. Errore chiaro se non è un giorno di borsa."""
+    """Position of the event day in the index. Raises a clear error if it is not a trading day."""
     ts = pd.Timestamp(event_date).normalize()
     if ts in index:
         return int(index.get_loc(ts))
     after = index[index > ts]
-    hint = f" Il primo giorno di borsa successivo è {after[0].date()}." if len(after) else ""
-    raise ValueError(f"{ts.date()} non è un giorno di borsa presente nei dati.{hint}")
+    hint = f" The next trading day is {after[0].date()}." if len(after) else ""
+    raise ValueError(f"{ts.date()} is not a trading day present in the data.{hint}")
 
 
 def _estimation_bounds(event_pos: int, params: EventStudyParams) -> tuple[int, int]:
-    """Indici [inizio, fine) della finestra di stima."""
+    """Index bounds [start, end) of the estimation window."""
     est_end = event_pos + params.event_window[0] - params.gap
     est_start = est_end - params.estimation_window
     if est_start < 0:
         raise ValueError(
-            f"Storico insufficiente prima dell'evento: servono {params.estimation_window + params.gap - params.event_window[0]} "
-            f"giorni di borsa, ne sono disponibili {event_pos}. Anticipa data.start in config.yaml."
+            f"Not enough history before the event: {params.estimation_window + params.gap - params.event_window[0]} "
+            f"trading days are needed, {event_pos} are available. Move data.start earlier in config.yaml."
         )
     return est_start, est_end
 
@@ -84,7 +84,7 @@ class MarketModelFit:
     model: str
     alpha: float
     betas: dict[str, float]
-    sigma: float          # deviazione standard dei residui nella finestra di stima
+    sigma: float          # standard deviation of the residuals over the estimation window
     r2: float
     n_obs: int
     dof: int
@@ -97,11 +97,11 @@ def _factors(returns: pd.DataFrame, model: str) -> pd.DataFrame:
         return returns[["market"]]
     if model == "market_sector":
         return pd.DataFrame({"market": returns["market"], "sector_excess": returns["sector"] - returns["market"]})
-    raise ValueError("model deve essere 'market' o 'market_sector'")
+    raise ValueError("model must be 'market' or 'market_sector'")
 
 
 def fit_market_model(y: pd.Series, X: pd.DataFrame, model: str) -> MarketModelFit:
-    """Regressione OLS di y sui fattori X con intercetta."""
+    """OLS regression of y on the factors X, with an intercept."""
     A = np.column_stack([np.ones(len(X)), X.to_numpy()])
     coef, *_ = np.linalg.lstsq(A, y.to_numpy(), rcond=None)
     resid = y.to_numpy() - A @ coef
@@ -127,7 +127,7 @@ def fit_market_model(y: pd.Series, X: pd.DataFrame, model: str) -> MarketModelFi
 
 @dataclass
 class Decomposition:
-    """Scomposizione del rendimento del giorno 0: la somma delle parti è il rendimento effettivo."""
+    """Decomposition of the day 0 return: the parts add up to the actual return."""
     actual: float
     alpha: float
     market: float
@@ -140,7 +140,7 @@ class Decomposition:
 class EventStudyResult:
     event_date: str
     model: MarketModelFit
-    window: list[dict]              # una riga per giorno della finestra evento
+    window: list[dict]              # one row per day of the event window
     day0_return: float
     day0_abnormal: float
     day0_t: float
@@ -148,34 +148,34 @@ class EventStudyResult:
     car: float
     car_t: float
     car_p: float
-    raw_zscore: float               # rendimento del giorno 0 rispetto a media/dev. std. della finestra di stima
-    pre_event_volatility: float     # volatilità annualizzata nei giorni prima dell'evento
+    raw_zscore: float               # day 0 return against the mean and sd of the estimation window
+    pre_event_volatility: float     # annualised volatility over the days before the event
     is_anomalous: bool
     decomposition: Decomposition
     notes: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict:
-        """Versione serializzabile in JSON (servirà ai tool dell'agente)."""
+        """JSON-serialisable version, used by the agent tools."""
         return asdict(self)
 
     def summary(self) -> str:
         d = self.decomposition
-        verdict = "ANOMALO" if self.is_anomalous else "non anomalo"
+        verdict = "ANOMALOUS" if self.is_anomalous else "not anomalous"
         lines = [
-            f"Evento {self.event_date} - modello {self.model.model} (R2 {self.model.r2:.2f}, stima {self.model.estimation_start} -> {self.model.estimation_end})",
-            f"Rendimento giorno 0: {self.day0_return:+.2%} | anomalo: {self.day0_abnormal:+.2%} (t={self.day0_t:.2f}, p={self.day0_p:.3f}) -> {verdict}",
-            f"CAR finestra: {self.car:+.2%} (t={self.car_t:.2f}, p={self.car_p:.3f}) | z-score grezzo: {self.raw_zscore:.2f}",
-            f"Scomposizione: mercato {d.market:+.2%}, settore {d.sector:+.2%}, specifico {d.idiosyncratic:+.2%}, alfa {d.alpha:+.3%} -> driver principale: {d.dominant_driver}",
+            f"Event {self.event_date} - model {self.model.model} (R2 {self.model.r2:.2f}, estimated {self.model.estimation_start} -> {self.model.estimation_end})",
+            f"Day 0 return: {self.day0_return:+.2%} | abnormal: {self.day0_abnormal:+.2%} (t={self.day0_t:.2f}, p={self.day0_p:.3f}) -> {verdict}",
+            f"CAR over the window: {self.car:+.2%} (t={self.car_t:.2f}, p={self.car_p:.3f}) | raw z-score: {self.raw_zscore:.2f}",
+            f"Decomposition: market {d.market:+.2%}, sector {d.sector:+.2%}, company-specific {d.idiosyncratic:+.2%}, alpha {d.alpha:+.3%} -> main driver: {d.dominant_driver}",
         ]
-        lines += [f"Nota: {n}" for n in self.notes]
+        lines += [f"Note: {n}" for n in self.notes]
         return "\n".join(lines)
 
 
 def event_study(returns: pd.DataFrame, event_date, params: EventStudyParams | None = None,
                 model: str = "market_sector") -> EventStudyResult:
-    """Event study su un DataFrame di rendimenti con colonne 'stock', 'market', 'sector'.
+    """Event study on a returns DataFrame with 'stock', 'market' and 'sector' columns.
 
-    I rendimenti devono essere logaritmici (compute_returns default), così CAR è una somma.
+    Returns must be logarithmic (the compute_returns default) so that CAR is a plain sum.
     """
     params = params or EventStudyParams()
     returns = returns.dropna()
@@ -188,11 +188,11 @@ def event_study(returns: pd.DataFrame, event_date, params: EventStudyParams | No
     est = slice(est_start, est_end)
     fit = fit_market_model(returns["stock"].iloc[est], X_all.iloc[est], model)
 
-    # Finestra evento, troncata se l'evento è troppo vicino alla fine dei dati.
+    # Event window, truncated if the event is too close to the end of the data.
     w_lo, w_hi = params.event_window
     first, last = pos + w_lo, min(pos + w_hi, len(idx) - 1)
     if pos + w_hi > len(idx) - 1:
-        notes.append(f"Finestra evento troncata: mancano dati dopo {idx[-1].date()}.")
+        notes.append(f"Event window truncated: no data after {idx[-1].date()}.")
 
     beta_vec = np.array([fit.betas[c] for c in X_all.columns])
     rows, car = [], 0.0
@@ -223,14 +223,14 @@ def event_study(returns: pd.DataFrame, event_date, params: EventStudyParams | No
     vol_slice = returns["stock"].iloc[max(0, pos - params.vol_window):pos]
     pre_vol = float(vol_slice.std(ddof=1) * np.sqrt(TRADING_DAYS))
 
-    # Contributi del giorno 0.
+    # Day 0 contributions.
     x0 = X_all.iloc[pos]
     mkt = fit.betas["market"] * float(x0["market"])
     sec = fit.betas.get("sector_excess", 0.0) * float(x0.get("sector_excess", 0.0))
-    parts = {"mercato": mkt, "settore": sec, "specifico dell'azienda": day0["abnormal"]}
+    parts = {"market": mkt, "sector": sec, "company-specific": day0["abnormal"]}
     dominant = max(parts, key=lambda k: abs(parts[k]))
     if model == "market":
-        notes.append("Modello a un fattore: l'effetto settore è incluso nella componente specifica.")
+        notes.append("Single-factor model: the sector effect is absorbed into the company-specific part.")
 
     return EventStudyResult(
         event_date=str(idx[pos].date()),
@@ -257,11 +257,11 @@ def event_study(returns: pd.DataFrame, event_date, params: EventStudyParams | No
 def scan_anomalies(returns: pd.DataFrame, params: EventStudyParams | None = None,
                    model: str = "market_sector", start=None, end=None,
                    only_anomalous: bool = True) -> pd.DataFrame:
-    """Applica l'event study a ogni giorno tra start ed end.
+    """Run the event study on every day between start and end.
 
-    Con only_anomalous=True (default) restituisce solo i giorni anomali: i candidati eventi.
-    Con False restituisce tutti i giorni, utile per scegliere un giorno tranquillo come
-    controllo negativo (il sistema non deve inventare una causa dove non c'è nulla da spiegare).
+    With only_anomalous=True (the default) it returns only the anomalous days, the candidate
+    events. With False it returns every day, which is useful for picking a quiet day as a
+    negative control: the system should not invent a cause where there is nothing to explain.
     """
     params = params or EventStudyParams()
     idx = returns.dropna().index

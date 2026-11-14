@@ -56,7 +56,7 @@ def test_cause_found_accepts_any_synonym(tmp_path):
 
 
 def test_terms_match_whole_words_only():
-    # senza i confini di parola, 'no' risulterebbe dentro 'not'/'announced' e 'ceo' dentro 'ceos'
+    # without word boundaries, 'no' would match inside 'not'/'announced' and 'ceo' inside 'ceos'
     assert contains_term("no specific cause was found", "no")
     assert not contains_term("nvidia announced it is not now listed", "no")
     assert contains_term("the ceo resigned", "ceo")
@@ -66,7 +66,7 @@ def test_terms_match_whole_words_only():
 
 def test_unsupported_numbers_flags_imported_figures():
     r = run(conclusion="The stock fell over 5% and is 30% below its high.")
-    assert unsupported_numbers(r) == ["30%"]          # 5% ~ -5.32% calcolato, 30% no
+    assert unsupported_numbers(r) == ["30%"]          # 5% matches the computed -5.32%, 30% does not
 
 
 def test_no_numbers_means_every_percentage_is_unverified():

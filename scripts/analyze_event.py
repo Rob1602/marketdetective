@@ -1,8 +1,8 @@
-"""Analizza un singolo evento dalla riga di comando.
+"""Run an event study on one stock and one date, from the command line.
 
-Esempio:
-    python scripts/analyze_event.py NVDA 2024-04-19
-    python scripts/analyze_event.py NVDA 2024-04-19 --model market
+Examples:
+    python scripts/analyze_event.py NVDA 2026-11-09
+    python scripts/analyze_event.py NVDA 2026-11-09 --model market
 """
 
 from __future__ import annotations
@@ -19,9 +19,9 @@ from marketdetective.stats import compute_returns, event_study  # noqa: E402
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="Event study su un titolo in una data")
+    ap = argparse.ArgumentParser(description="Event study on one stock and one date")
     ap.add_argument("ticker")
-    ap.add_argument("date", help="data dell'evento, formato AAAA-MM-GG")
+    ap.add_argument("date", help="event date, format YYYY-MM-DD")
     ap.add_argument("--model", default="market_sector", choices=["market", "market_sector"])
     args = ap.parse_args()
 

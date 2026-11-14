@@ -1,14 +1,14 @@
-"""Esegue l'intero esperimento su più eventi, senza bisogno di lanciare un comando per volta.
+"""Run the whole experiment over several events, without launching one command at a time.
 
-Per ogni data: scarica le notizie (se mancano), poi esegue l'agente e la baseline RAG.
-Si può lasciar girare e tornare dopo.
+For each date it downloads the news if missing, then runs the agent and the RAG baseline. It can
+be left running unattended.
 
-Esempi:
+Examples:
     python scripts/run_all.py NVDA 2026-11-09 2026-04-30 2026-08-27
     python scripts/run_all.py NVDA 2026-02-02 2026-06-01 --no-download
     python scripts/run_all.py AAPL 2026-05-15 --modes agent
 
-Le esecuzioni già presenti in runs/ vengono saltate (usa --force per rifarle).
+Runs already present in runs/ are skipped; use --force to repeat them.
 """
 
 from __future__ import annotations
@@ -38,12 +38,12 @@ def hms(seconds: float) -> str:
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="Esegue agente e baseline su più eventi")
+    ap = argparse.ArgumentParser(description="Run the agent and the baseline over several events")
     ap.add_argument("ticker")
-    ap.add_argument("dates", nargs="+", help="date degli eventi, formato AAAA-MM-GG")
-    ap.add_argument("--modes", default="agent,rag", help="quali modalità eseguire (default: agent,rag)")
-    ap.add_argument("--no-download", action="store_true", help="non scaricare notizie, usa l'archivio esistente")
-    ap.add_argument("--force", action="store_true", help="riesegui anche i casi già presenti in runs/")
+    ap.add_argument("dates", nargs="+", help="event dates, format YYYY-MM-DD")
+    ap.add_argument("--modes", default="agent,rag", help="which modes to run (default: agent,rag)")
+    ap.add_argument("--no-download", action="store_true", help="skip the download and use the existing archive")
+    ap.add_argument("--force", action="store_true", help="re-run cases already present in runs/")
     ap.add_argument("--model", default=None)
     args = ap.parse_args()
 
@@ -51,35 +51,35 @@ def main() -> None:
     ticker = cfg.ticker(args.ticker).symbol
     modes = [m.strip() for m in args.modes.split(",") if m.strip()]
 
-    # 1. Notizie
+    # 1. News
     if not args.no_download:
-        print("=== Notizie ===")
+        print("=== News ===")
         client = FinnhubClient()
         archive = NewsArchive(cfg.news_dir)
         for date in args.dates:
             try:
                 rep = download_event_news(client, archive, ticker, date,
                                           cfg.news_days_before, cfg.news_days_after)
-                warn = "  ATTENZIONE: limite Finnhub raggiunto" if rep.saturated_days else ""
-                print(f"  {date}: {rep.downloaded} scaricate, {rep.added} nuove{warn}")
+                warn = "  WARNING: Finnhub per-request cap reached" if rep.saturated_days else ""
+                print(f"  {date}: {rep.downloaded} downloaded, {rep.added} new{warn}")
             except Exception as e:  # noqa: BLE001
-                print(f"  {date}: errore nel download ({e}). Proseguo con l'archivio esistente.")
+                print(f"  {date}: download failed ({e}). Carrying on with the existing archive.")
 
-    # 2. Indice e agente (gli embedding mancanti si calcolano una volta sola)
-    print("\n=== Indice RAG ===")
+    # 2. Index and agent (missing embeddings are computed once)
+    print("\n=== RAG index ===")
     t0 = time.perf_counter()
     agent = build_agent(cfg, args.model)
-    print(f"  {len(agent.tb.index.items)} notizie indicizzate in {hms(time.perf_counter() - t0)}")
+    print(f"  {len(agent.tb.index.items)} news items indexed in {hms(time.perf_counter() - t0)}")
 
-    # 3. Esecuzioni
+    # 3. Runs
     jobs = [(d, m) for d in args.dates for m in modes]
-    print(f"\n=== {len(jobs)} esecuzioni · modello {agent.model} ===")
+    print(f"\n=== {len(jobs)} runs · model {agent.model} ===")
     done, skipped, failed = 0, 0, []
     t_start = time.perf_counter()
 
     for i, (date, mode) in enumerate(jobs, 1):
         if not args.force and already_done(ticker, date, mode):
-            print(f"\n[{i}/{len(jobs)}] {date} · {mode}: già fatto, salto (--force per rifarlo)")
+            print(f"\n[{i}/{len(jobs)}] {date} · {mode}: already done, skipping (--force to repeat)")
             skipped += 1
             continue
         print(f"\n[{i}/{len(jobs)}] {date} · {mode}")
@@ -88,24 +88,24 @@ def main() -> None:
             run = agent.investigate if mode == "agent" else agent.rag_baseline
             result = run(ticker, date)
             base = save(result, RUNS)
-            flag = "  CITAZIONI NON VALIDE" if result.citations_invalid else ""
-            err = f"  ERRORE: {result.error}" if result.error else ""
+            flag = "  INVALID CITATIONS" if result.citations_invalid else ""
+            err = f"  ERROR: {result.error}" if result.error else ""
             causes = len(result.report.get("supported_causes", []))
-            print(f"  {hms(time.perf_counter() - t_run)} · {causes} cause · "
-                  f"{len(result.citations_valid)} citazioni valide{flag}{err}")
+            print(f"  {hms(time.perf_counter() - t_run)} · {causes} causes · "
+                  f"{len(result.citations_valid)} valid citations{flag}{err}")
             print(f"  → {base.name}.md")
             done += 1
         except Exception as e:  # noqa: BLE001
             failed.append((date, mode, str(e)))
-            print(f"  FALLITA: {type(e).__name__}: {e}")
+            print(f"  FAILED: {type(e).__name__}: {e}")
             traceback.print_exc(limit=1)
 
-    print(f"\n=== Fatto in {hms(time.perf_counter() - t_start)}: "
-          f"{done} eseguite, {skipped} saltate, {len(failed)} fallite ===")
+    print(f"\n=== Done in {hms(time.perf_counter() - t_start)}: "
+          f"{done} run, {skipped} skipped, {len(failed)} failed ===")
     for date, mode, err in failed:
         print(f"  {date} · {mode}: {err}")
-    print("\nAggiungi le cause vere dei nuovi eventi in data/ground_truth.yaml,")
-    print("poi lancia: python scripts/evaluate.py")
+    print("\nAdd the ground truth cause of any new event to data/ground_truth.yaml,")
+    print("then run: python scripts/evaluate.py")
 
 
 if __name__ == "__main__":

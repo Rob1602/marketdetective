@@ -44,16 +44,16 @@ def test_firm_specific_shock_detected(returns):
     assert res.is_anomalous
     assert res.day0_abnormal == pytest.approx(SHOCK, abs=0.03)
     assert res.day0_p < 0.01
-    assert res.decomposition.dominant_driver == "specifico dell'azienda"
+    assert res.decomposition.dominant_driver == "company-specific"
 
 
 def test_market_driven_move_is_not_anomalous():
-    # Il mercato crolla del 5%: il titolo scende molto, ma è spiegato dal beta.
+    # The market drops 5%: the stock falls a lot, but beta explains it.
     df = make_returns(shock=0.0, market_shock=-0.05)
     res = event_study(df, EVENT_DATE, PARAMS)
     assert res.day0_return < -0.03
     assert not res.is_anomalous
-    assert res.decomposition.dominant_driver == "mercato"
+    assert res.decomposition.dominant_driver == "market"
 
 
 def test_decomposition_adds_up(returns):
@@ -62,7 +62,7 @@ def test_decomposition_adds_up(returns):
 
 
 def test_no_look_ahead(returns):
-    """Modificare i dati dal giorno dell'evento in poi non deve cambiare la stima del modello."""
+    """Changing the data from the event day onward must not change the model estimates."""
     base = event_study(returns, EVENT_DATE, PARAMS)
     altered = returns.copy()
     pos = returns.index.get_loc(pd.Timestamp(EVENT_DATE))
@@ -83,23 +83,23 @@ def test_single_factor_model_notes_sector(returns):
     res = event_study(returns, EVENT_DATE, PARAMS, model="market")
     assert "sector_excess" not in res.model.betas
     assert res.decomposition.sector == 0.0
-    assert any("un fattore" in n for n in res.notes)
+    assert any("Single-factor" in n for n in res.notes)
 
 
 def test_non_trading_day_raises(returns):
-    with pytest.raises(ValueError, match="non è un giorno di borsa"):
-        locate_event(returns.index, "2024-03-16")  # sabato
+    with pytest.raises(ValueError, match="not a trading day"):
+        locate_event(returns.index, "2024-03-16")  # a Saturday
 
 
 def test_insufficient_history_raises(returns):
-    with pytest.raises(ValueError, match="Storico insufficiente"):
+    with pytest.raises(ValueError, match="Not enough history"):
         event_study(returns, returns.index[50], PARAMS)
 
 
 def test_truncated_window_near_end(returns):
     res = event_study(returns, returns.index[-1], PARAMS)
     assert [r["rel_day"] for r in res.window] == [-1, 0]
-    assert any("troncata" in n for n in res.notes)
+    assert any("truncated" in n for n in res.notes)
 
 
 def test_to_dict_is_json_serializable(returns):
@@ -116,6 +116,6 @@ def test_scan_finds_the_event(returns):
 def test_scan_can_also_return_quiet_days(returns):
     everything = scan_anomalies(returns, PARAMS, start="2024-03-01", end="2024-03-29", only_anomalous=False)
     quiet = everything[~everything["is_anomalous"]]
-    assert len(everything) > len(quiet) > 0            # ci sono sia giorni anomali sia tranquilli
+    assert len(everything) > len(quiet) > 0            # both anomalous and quiet days are present
     assert quiet["t"].abs().max() <= PARAMS.z_threshold
     assert EVENT_DATE not in set(quiet["date"])

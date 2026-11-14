@@ -1,12 +1,12 @@
-"""Notizie: download da Finnhub e archivio locale.
+"""News: download from Finnhub and local archive.
 
-Le notizie scaricate vengono salvate in file JSONL (una notizia per riga), uno per ticker:
+Downloaded news is stored as JSONL, one file per ticker:
     data/news/NVDA.jsonl
 
-Perché salvarle invece di interrogare l'API ogni volta:
-- riproducibilità: la valutazione usa sempre lo stesso archivio, anche se online cambia;
-- limiti dell'API gratuita: si scarica una volta sola;
-- il RAG lavora offline.
+Why store it instead of querying the API every time:
+- reproducibility: the evaluation always uses the same archive, even if the web changes;
+- free tier limits: everything is downloaded once;
+- the RAG then works offline.
 """
 
 from __future__ import annotations
@@ -27,7 +27,7 @@ FINNHUB_URL = "https://finnhub.io/api/v1/company-news"
 class NewsItem:
     id: str
     ticker: str
-    published: str      # ISO 8601 in UTC, es. "2024-04-19T13:05:00+00:00"
+    published: str      # ISO 8601 in UTC, e.g. "2024-04-19T13:05:00+00:00"
     source: str
     headline: str
     summary: str
@@ -38,7 +38,7 @@ class NewsItem:
         return pd.Timestamp(self.published)
 
     def text(self) -> str:
-        """Il testo usato per gli embedding e mostrato al modello."""
+        """The text used for embeddings and shown to the model."""
         return f"{self.headline}. {self.summary}".strip()
 
     def citation(self) -> str:
@@ -46,15 +46,15 @@ class NewsItem:
 
 
 class FinnhubClient:
-    """Client minimale per l'endpoint company-news di Finnhub."""
+    """Minimal client for Finnhub's company-news endpoint."""
 
     def __init__(self, api_key: str | None = None, session=None, timeout: float = 20):
         self.api_key = api_key or os.environ.get("FINNHUB_API_KEY")
         if not self.api_key:
             raise RuntimeError(
-                "Chiave Finnhub mancante. Impostala con:\n"
-                "  conda env config vars set FINNHUB_API_KEY=la_tua_chiave\n"
-                "poi riattiva l'ambiente: conda deactivate && conda activate marketdetective"
+                "Finnhub API key missing. Set it with:\n"
+                "  conda env config vars set FINNHUB_API_KEY=your_key\n"
+                "then reactivate the environment: conda deactivate && conda activate marketdetective"
             )
         if session is None:
             import requests
@@ -66,9 +66,9 @@ class FinnhubClient:
         params = {"symbol": ticker.upper(), "from": start, "to": end, "token": self.api_key}
         resp = self.session.get(FINNHUB_URL, params=params, timeout=self.timeout)
         if resp.status_code == 401:
-            raise RuntimeError("Finnhub ha rifiutato la chiave (401). Controlla FINNHUB_API_KEY.")
+            raise RuntimeError("Finnhub rejected the key (401). Check FINNHUB_API_KEY.")
         if resp.status_code == 429:
-            raise RuntimeError("Troppe richieste a Finnhub (429). Aspetta un minuto e riprova.")
+            raise RuntimeError("Too many requests to Finnhub (429). Wait a minute and retry.")
         resp.raise_for_status()
         return [parse_finnhub_item(raw, ticker) for raw in resp.json() if raw.get("headline")]
 
@@ -87,7 +87,7 @@ def parse_finnhub_item(raw: dict, ticker: str) -> NewsItem:
 
 
 class NewsArchive:
-    """Archivio locale di notizie, un file JSONL per ticker. Le notizie già presenti non vengono duplicate."""
+    """Local news archive, one JSONL file per ticker. Items already stored are not duplicated."""
 
     def __init__(self, archive_dir: str | Path):
         self.dir = Path(archive_dir)
@@ -110,7 +110,7 @@ class NewsArchive:
         return items
 
     def add(self, items: Iterable[NewsItem]) -> int:
-        """Aggiunge le notizie nuove e restituisce quante ne ha aggiunte."""
+        """Add the new items and return how many were added."""
         by_ticker: dict[str, list[NewsItem]] = {}
         for it in items:
             by_ticker.setdefault(it.ticker, []).append(it)
@@ -140,9 +140,9 @@ def event_news_range(event_date: str, days_before: int, days_after: int) -> tupl
             (d + timedelta(days=days_after)).strftime("%Y-%m-%d"))
 
 
-# Finnhub restituisce al massimo circa 250 notizie per richiesta, le più recenti.
-# Per un titolo molto seguito come NVIDIA una finestra di 6 giorni le supera, e si perderebbero
-# proprio le notizie PRIMA dell'evento. Per questo si scarica un giorno alla volta.
+# Finnhub returns at most about 250 items per request, the most recent ones.
+# For a widely covered stock such as NVIDIA a 6-day window exceeds that, and the items lost
+# are exactly those published BEFORE the event. Hence one request per day.
 FINNHUB_PAGE_CAP = 240
 
 
@@ -151,14 +151,14 @@ class DownloadReport:
     downloaded: int
     added: int
     per_day: dict[str, int]
-    saturated_days: list[str]   # giorni in cui Finnhub ha probabilmente tagliato dei risultati
+    saturated_days: list[str]   # days where Finnhub probably truncated the results
 
 
 def download_event_news(client: FinnhubClient, archive: NewsArchive, ticker: str, event_date: str,
                         days_before: int = 3, days_after: int = 2, pause: float = 1.1) -> DownloadReport:
-    """Scarica le notizie intorno a un evento, un giorno alla volta, e le salva nell'archivio.
+    """Download the news around an event, one day at a time, and store it in the archive.
 
-    `pause` tiene le richieste sotto il limite gratuito di Finnhub (60 al minuto).
+    `pause` keeps requests under Finnhub's free limit of 60 per minute.
     """
     import time
 

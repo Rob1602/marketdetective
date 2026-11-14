@@ -1,4 +1,4 @@
-"""Caricamento della configurazione da config.yaml."""
+"""Configuration loading from config.yaml."""
 
 from __future__ import annotations
 
@@ -45,8 +45,8 @@ class Config:
         try:
             return self.tickers[symbol.upper()]
         except KeyError:
-            known = ", ".join(self.tickers) or "nessuno"
-            raise KeyError(f"Ticker '{symbol}' non presente in config.yaml (configurati: {known})") from None
+            known = ", ".join(self.tickers) or "none"
+            raise KeyError(f"Ticker '{symbol}' is not in config.yaml (configured: {known})") from None
 
 
 def load_config(path: str | Path = DEFAULT_CONFIG) -> Config:

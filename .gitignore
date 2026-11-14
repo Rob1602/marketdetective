@@ -6,12 +6,16 @@ __pycache__/
 *.egg-info/
 .DS_Store
 
-# cache dei prezzi scaricati e degli embedding (si rigenerano da soli)
+# price cache and embedding cache, both regenerated automatically
 data/prices/
 data/news/embeddings_*.npz
 
-# chiavi e segreti
+# keys and secrets
 .env
 
-# file di lettura generati da download_news.py
+# per-event spreadsheets written by download_news.py
 data/review/
+
+# folders created by installed packages
+.agents/
+.claude/

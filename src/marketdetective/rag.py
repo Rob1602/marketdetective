@@ -1,15 +1,15 @@
-"""RAG: ricerca semantica nell'archivio di notizie, filtrata per ticker e data.
+"""RAG: semantic search over the news archive, filtered by ticker and date.
 
-Come funziona:
-1. Ogni notizia (titolo + riassunto) viene trasformata in un vettore (embedding)
-   da un modello locale servito da Ollama (nomic-embed-text).
-2. Anche la domanda viene trasformata in un vettore.
-3. Si filtrano le notizie del ticker giusto, pubblicate PRIMA della chiusura del
-   giorno dell'evento (niente look-ahead), e si ordinano per similarità del coseno.
+How it works:
+1. Every news item (headline + summary) becomes a vector (embedding), computed by a local model
+   served by Ollama (nomic-embed-text).
+2. The question becomes a vector too.
+3. News is filtered to the right ticker and to items published BEFORE the close of the event day
+   (no look-ahead), then ranked by cosine similarity.
 
-Perché un indice in NumPy e non un database vettoriale: con poche migliaia di notizie
-la ricerca esatta su tutti i vettori richiede millisecondi, è trasparente e non aggiunge
-dipendenze. Con archivi molto più grandi si passerebbe a Chroma o FAISS.
+Why a NumPy index and not a vector database: with a few thousand news items, an exact search over
+every vector takes milliseconds, is transparent and adds no dependency. A much larger archive
+would call for Chroma or FAISS.
 """
 
 from __future__ import annotations
@@ -36,9 +36,9 @@ class Embedder(Protocol):
 
 
 class OllamaEmbedder:
-    """Embedding locali con Ollama. Richiede: ollama pull nomic-embed-text"""
+    """Local embeddings through Ollama. Requires: ollama pull nomic-embed-text"""
 
-    # nomic-embed-text è addestrato con questi prefissi per distinguere documenti e domande.
+    # nomic-embed-text is trained with these prefixes to tell documents from queries.
     DOC_PREFIX = "search_document: "
     QUERY_PREFIX = "search_query: "
 
@@ -63,9 +63,9 @@ class OllamaEmbedder:
 
 
 def market_close_utc(date) -> pd.Timestamp:
-    """Ora di chiusura della borsa USA (16:00 New York) di quel giorno, in UTC.
+    """US market close (16:00 New York) on that day, in UTC.
 
-    Una notizia pubblicata dopo la chiusura non può spiegare il movimento di quel giorno.
+    An item published after the close cannot explain that day's move.
     """
     local = pd.Timestamp(f"{pd.Timestamp(date).date()} {MARKET_CLOSE}").tz_localize(MARKET_TZ)
     return local.tz_convert("UTC")
@@ -89,7 +89,7 @@ class SearchHit:
 
 
 class NewsIndex:
-    """Indice vettoriale delle notizie, con cache degli embedding su disco."""
+    """Vector index over the news, with the embeddings cached on disk."""
 
     def __init__(self, archive: NewsArchive, embedder: Embedder, cache_path: str | Path | None = None):
         self.archive = archive
@@ -100,7 +100,7 @@ class NewsIndex:
         self.vectors = np.zeros((0, 0), dtype=np.float32)
 
     def build(self) -> int:
-        """Carica l'archivio e calcola gli embedding mancanti. Restituisce quanti ne ha calcolati."""
+        """Load the archive and compute the missing embeddings. Returns how many were computed."""
         self.items = self.archive.load_all()
         cache: dict[str, np.ndarray] = {}
         if self.cache_path.exists():
@@ -121,7 +121,7 @@ class NewsIndex:
 
     def search(self, query: str, ticker: str, until: pd.Timestamp, lookback_days: int = 7,
                k: int = 5) -> list[SearchHit]:
-        """Le k notizie più pertinenti su `ticker`, pubblicate tra `until - lookback_days` e `until`."""
+        """The k most relevant items about `ticker`, published between `until - lookback_days` and `until`."""
         if not self.items:
             self.build()
         until = pd.Timestamp(until)
@@ -140,5 +140,5 @@ class NewsIndex:
 
     def search_event(self, query: str, ticker: str, event_date, lookback_days: int = 7,
                      k: int = 5) -> list[SearchHit]:
-        """Ricerca per un evento: solo notizie uscite prima della chiusura del giorno dell'evento."""
+        """Search for an event: only items published before the close of the event day."""
         return self.search(query, ticker, market_close_utc(event_date), lookback_days, k)

@@ -1,18 +1,16 @@
-"""Valutazione: confronta i report salvati in runs/ con le cause vere di data/ground_truth.yaml.
+"""Evaluation: compares the reports in runs/ with the ground truth in data/ground_truth.yaml.
 
-Quattro misure automatiche per ogni esecuzione:
+Four automatic measures per run:
 
-1. cause_found   - la risposta contiene i termini chiave della causa vera.
-                   Ogni gruppo di key_terms deve avere almeno un termine presente.
-2. citations     - quante citazioni sono valide e quante inventate (o successive alla chiusura).
-                   La verifica avviene già durante l'esecuzione, qui si riportano i conteggi.
-3. numeric_claims - le percentuali scritte nel testo che NON corrispondono a nessun numero
-                   calcolato dall'event study. Serve a scoprire se il modello importa cifre
-                   dalle notizie o se le inventa.
-4. cost          - secondi, passi e token.
+1. cause_found    - the answer contains the ground truth key terms. Every group of synonyms must
+                    have at least one term present.
+2. citations      - how many citations are valid and how many fabricated (or published after the
+                    close). The check happens during the run; the counts are reported here.
+3. numeric_claims - percentages in the text matching no value produced by the event study. Shows
+                    whether the model imports figures from the news instead of measuring them.
+4. cost           - seconds, steps and tokens.
 
-Quello che resta a te: il giudizio sulla qualità della risposta. Lo script produce anche una
-griglia da compilare a mano (evaluation_manual.csv).
+Judging the quality of an answer is left to a human reading the reports.
 """
 
 from __future__ import annotations
@@ -25,7 +23,7 @@ from pathlib import Path
 import yaml
 
 PCT = re.compile(r"(-?\d+(?:[.,]\d+)?)\s*%")
-# Numeri dell'event study che il testo può legittimamente citare.
+# Event study figures the text may legitimately quote.
 NUMERIC_FIELDS = ["day_return", "explained_by_market", "explained_by_sector",
                   "company_specific_abnormal_return", "cumulative_abnormal_return_days_-1_to_+1"]
 
@@ -57,7 +55,7 @@ def load_runs(runs_dir: str | Path, latest_only: bool = True) -> list[dict]:
             runs.append(json.loads(p.read_text(encoding="utf-8")) | {"file": p.name})
         except json.JSONDecodeError:
             continue
-    if latest_only:   # i nomi finiscono con la data e l'ora: l'ultimo vince
+    if latest_only:   # filenames end with date and time, so the last one wins
         keep = {}
         for r in runs:
             keep[(r["ticker"], r["date"], r["mode"])] = r
@@ -73,16 +71,16 @@ def answer_text(run: dict) -> str:
 
 
 def contains_term(text: str, term: str) -> bool:
-    """Cerca il termine come parola intera.
+    """Match the term as a whole word.
 
-    Senza i confini di parola 'no' risulterebbe presente dentro 'not', 'now' o 'announced',
-    e il controllo darebbe per trovata qualsiasi causa.
+    Without word boundaries, 'no' would be found inside 'not', 'now' or 'announced', and the
+    check would report every cause as found.
     """
     return re.search(rf"(?<!\w){re.escape(term)}(?!\w)", text) is not None
 
 
 def cause_found(run: dict, truth: Truth) -> tuple[bool, list[str]]:
-    """True se ogni gruppo di termini chiave è rappresentato. Restituisce anche i gruppi mancanti."""
+    """True if every key-term group is represented. Also returns the groups that are missing."""
     text = answer_text(run)
     missing = [" / ".join(g) for g in truth.key_terms
                if not any(contains_term(text, t) for t in g)]
@@ -101,10 +99,10 @@ def _values(numbers: dict | None) -> list[float]:
 
 
 def unsupported_numbers(run: dict, tolerance: float = 0.5) -> list[str]:
-    """Percentuali citate nel testo che non corrispondono a nessun numero calcolato.
+    """Percentages in the text that match no computed value.
 
-    Tolleranza in punti percentuali: '5%' passa se il valore calcolato è -5.32%.
-    È un controllo grossolano, da leggere come segnalazione, non come verdetto.
+    Tolerance in percentage points: '5%' passes if the computed value is -5.32%.
+    A coarse check, to be read as a flag rather than a verdict.
     """
     known = _values(run.get("numbers"))
     bad = []
@@ -165,7 +163,7 @@ def score_run(run: dict, truths: dict[tuple[str, str], Truth]) -> Score:
 
 
 def summarize(scores: list[Score]) -> dict[str, dict]:
-    """Medie per modalità."""
+    """Averages per mode."""
     out = {}
     for mode in sorted({s.mode for s in scores}):
         rows = [s for s in scores if s.mode == mode]

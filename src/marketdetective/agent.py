@@ -1,14 +1,14 @@
-"""L'agente: un LLM locale che usa gli strumenti tramite function calling e scrive un report strutturato.
+"""The agent: a local LLM that uses tools through function calling and writes a structured report.
 
-Due modalità, per il confronto sperimentale:
-- "agent": il modello chiama analyze_event e search_news quante volte gli servono, poi scrive il report;
-- "rag":   baseline senza strumenti. Una sola ricerca con la domanda dell'utente, le notizie trovate
-           vengono messe nel prompt e il modello risponde. Nessun numero statistico.
+Two modes, for the comparison:
+- "agent": the model calls analyze_event and search_news as often as it needs, then writes the report.
+- "rag":   baseline without tools. One search with the user's question, the retrieved news goes
+           into the prompt and the model answers. No statistics at all.
 
-Garanzie aggiunte dal codice (non ci si fida del modello):
-- i numeri del report vengono dall'event study, non dal testo del modello;
-- ogni citazione viene verificata: deve essere una notizia davvero restituita da search_news
-  e uscita prima della chiusura del giorno dell'evento. Le citazioni non valide vengono segnalate.
+Guarantees enforced in code rather than trusted to the model:
+- the numbers in the report come from the event study, not from the model's text;
+- every citation is checked: it must be a news item actually returned by search_news and published
+  before the market close of the event day. Invalid citations are reported.
 """
 
 from __future__ import annotations
@@ -22,7 +22,7 @@ from pydantic import BaseModel, Field
 
 from .tools import TOOL_SCHEMAS, Toolbox
 
-# ------------------------------------------------------------- schema del report
+# ------------------------------------------------------------- report schema
 
 
 class Cause(BaseModel):
@@ -31,7 +31,7 @@ class Cause(BaseModel):
 
 
 class LLMReport(BaseModel):
-    """Quello che il modello deve produrre (structured output)."""
+    """What the model must produce (structured output)."""
     supported_causes: list[Cause] = Field(description="Causes directly supported by the news found")
     hypotheses: list[str] = Field(description="Plausible explanations NOT directly confirmed by the news")
     conclusion: str = Field(description="2-3 sentences answering the question")
@@ -66,7 +66,7 @@ Cite news only by their exact "id" values from the search results.
 Keep supported causes and hypotheses separate."""
 
 
-# ------------------------------------------------------------------ traccia
+# -------------------------------------------------------------------- trace
 
 
 @dataclass
@@ -134,13 +134,13 @@ class RunResult:
         return "\n".join(lines)
 
 
-# ------------------------------------------------------------------- agente
+# -------------------------------------------------------------------- agent
 
 ChatFn = Callable[..., object]
 
 
 def _get(obj, key, default=None):
-    """Legge un campo sia da un dict sia da un oggetto della libreria ollama."""
+    """Read a field from either a dict or an object returned by the ollama library."""
     if obj is None:
         return default
     if isinstance(obj, dict):
@@ -161,7 +161,7 @@ class MarketDetective:
     def __init__(self, toolbox: Toolbox, model: str = "qwen3:8b", temperature: float = 0.0,
                  max_tool_rounds: int = 6, chat: ChatFn | None = None, verbose: bool = True,
                  log: Callable[[str], None] | None = None):
-        """`log` riceve ogni passo mentre accade: serve a Streamlit per mostrarli in tempo reale."""
+        """`log` receives each step as it happens, so Streamlit can show progress live."""
         self.tb = toolbox
         self.model = model
         self.options = {"temperature": temperature}
@@ -188,7 +188,7 @@ class MarketDetective:
         resp = self._call(steps, "final_report", messages=messages + [{"role": "user", "content": FINAL_INSTRUCTION}],
                           format=LLMReport.model_json_schema())
         content = _get(_get(resp, "message"), "content", "") or ""
-        # Se il modello aggiunge testo intorno al JSON (es. un blocco di ragionamento), teniamo solo il JSON.
+        # If the model wraps the JSON in extra text (a reasoning block, say), keep only the JSON.
         if "{" in content:
             content = content[content.index("{"): content.rindex("}") + 1]
         return LLMReport.model_validate_json(content).model_dump()
@@ -202,7 +202,7 @@ class MarketDetective:
             invalid += bad
         return sorted(set(valid)), sorted(set(invalid))
 
-    # ------------------------------------------------------------ modalità agente
+    # ----------------------------------------------------------------- agent mode
 
     def investigate(self, ticker: str, date: str, question: str | None = None) -> RunResult:
         question = question or f"Why did {ticker} stock move on {date}? Was the move unusual, and what caused it?"
@@ -239,18 +239,18 @@ class MarketDetective:
                     self._log(f"  → {name}({', '.join(f'{k}={v!r}' for k, v in args.items())})  [{summary}]")
                     messages.append({"role": "tool", "content": json.dumps(result), "tool_name": name})
 
-            if numbers is None:   # il modello non ha mai chiamato analyze_event: i numeri li aggiunge il codice
+            if numbers is None:   # the model never called analyze_event, so the code adds the numbers
                 numbers = self.tb.analyze_event(ticker, date)
             self._log("  → writing the report...")
             report = self._final_report(messages, steps)
-        except Exception as e:  # noqa: BLE001 - l'errore va nel risultato, non deve perdere la traccia
+        except Exception as e:  # noqa: BLE001 - the error goes into the result, the trace is kept
             report, error = {}, f"{type(e).__name__}: {e}"
 
         valid, invalid = self._check_citations(report, ticker, date)
         return RunResult("agent", self.model, ticker.upper(), date, question, numbers, report,
                          valid, invalid, steps, time.perf_counter() - t_start, error)
 
-    # ------------------------------------------------------------- baseline RAG
+    # ------------------------------------------------------------- RAG baseline
 
     def rag_baseline(self, ticker: str, date: str, question: str | None = None, k: int = 8) -> RunResult:
         question = question or f"Why did {ticker} stock move on {date}? Was the move unusual, and what caused it?"

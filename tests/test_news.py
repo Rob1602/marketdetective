@@ -2,7 +2,7 @@ import pytest
 
 from marketdetective.news import FinnhubClient, NewsArchive, download_event_news, event_news_range
 
-# 2024-04-19 13:00 UTC e 2024-04-19 22:00 UTC (dopo la chiusura)
+# 2024-04-19 13:00 UTC and 2024-04-19 22:00 UTC (after the close)
 RAW = [
     {"id": 1, "datetime": 1713531600, "headline": "Chip stocks slide", "summary": "Semis fall.", "source": "Reuters", "url": "u1"},
     {"id": 2, "datetime": 1713564000, "headline": "After-hours note", "summary": "", "source": "CNBC", "url": "u2"},
@@ -60,7 +60,7 @@ def test_downloads_one_day_at_a_time(tmp_path):
     rep = download_event_news(FinnhubClient("k", session=s), NewsArchive(tmp_path), "NVDA", "2024-04-19", pause=0)
     assert [(c["from"], c["to"]) for c in s.calls] == [(d, d) for d in
         ["2024-04-16", "2024-04-17", "2024-04-18", "2024-04-19", "2024-04-20", "2024-04-21"]]
-    assert rep.downloaded == 12 and rep.added == 2      # la stessa notizia ogni giorno: deduplicata
+    assert rep.downloaded == 12 and rep.added == 2      # the same item every day, deduplicated
     assert rep.saturated_days == []
 
 

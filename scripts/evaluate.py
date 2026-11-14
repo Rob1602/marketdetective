@@ -1,12 +1,12 @@
-"""Confronta le esecuzioni salvate in runs/ con le cause vere di data/ground_truth.yaml.
+"""Compare the runs in runs/ with the ground truth in data/ground_truth.yaml.
 
-Esempi:
+Examples:
     python scripts/evaluate.py
-    python scripts/evaluate.py --all     # include anche le esecuzioni ripetute, non solo l'ultima
+    python scripts/evaluate.py --all     # include repeated runs, not only the latest one
 
-Produce:
-    evaluation/results.md           la tabella di confronto, da incollare nel README
-    evaluation/results.csv          gli stessi dati per Excel
+Writes:
+    evaluation/results.md           the comparison tables
+    evaluation/results.csv          the same data as a spreadsheet
 """
 
 from __future__ import annotations
@@ -31,14 +31,14 @@ def md_table(rows: list[list[str]], header: list[str]) -> str:
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="Valuta le esecuzioni salvate")
-    ap.add_argument("--all", action="store_true", help="includi tutte le esecuzioni, non solo l'ultima per caso")
+    ap = argparse.ArgumentParser(description="Score the saved runs against the ground truth")
+    ap.add_argument("--all", action="store_true", help="include every run, not only the latest one per case")
     ap.add_argument("--runs", default=str(PROJECT_ROOT / "runs"))
     args = ap.parse_args()
 
     runs = load_runs(args.runs, latest_only=not args.all)
     if not runs:
-        print(f"Nessuna esecuzione in {args.runs}. Lancia prima scripts/ask.py.")
+        print(f"No runs in {args.runs}. Run scripts/ask.py first.")
         return
     truths = load_ground_truth(PROJECT_ROOT / "data" / "ground_truth.yaml")
     scores = [score_run(r, truths) for r in runs]
@@ -46,14 +46,14 @@ def main() -> None:
     out_dir = PROJECT_ROOT / "evaluation"
     out_dir.mkdir(exist_ok=True)
 
-    # --- tabella per esecuzione
+    # --- per-run table
     per_run_header = ["Event", "Mode", "Cause found", "Valid cit.", "Fabricated cit.",
                       "Unverified numbers", "Hypotheses", "Seconds", "Tokens"]
     per_run = [[s.date, MODE_LABEL.get(s.mode, s.mode), "yes" if s.cause_found else "NO",
                 str(s.citations_valid), str(s.citations_invalid), str(len(s.unsupported_numbers)),
                 str(s.n_hypotheses), f"{s.seconds:.0f}", str(s.tokens)] for s in scores]
 
-    # --- tabella riassuntiva
+    # --- summary table
     summary = summarize(scores)
     sum_header = ["Metric"] + [MODE_LABEL.get(m, m) for m in summary]
     def row(label, fn):
@@ -84,21 +84,21 @@ def main() -> None:
 
     (out_dir / "results.md").write_text("\n".join(text), encoding="utf-8")
 
-    # --- promemoria a schermo: cosa rileggere a mano (non finisce nel file)
+    # --- on-screen reminder of what to re-read by hand (kept out of the file)
     problems = [s for s in scores if s.missing_terms or s.citations_invalid or s.unsupported_numbers or s.error]
     screen = list(text)
     if problems:
-        screen += ["## Da controllare a mano (solo a schermo)", ""]
+        screen += ["## To re-read by hand (screen only)", ""]
         for s in problems:
             bits = []
             if s.missing_terms:
-                bits.append("termini della causa vera non citati: " + "; ".join(s.missing_terms))
+                bits.append("ground truth terms not mentioned: " + "; ".join(s.missing_terms))
             if s.citations_invalid:
-                bits.append(f"{s.citations_invalid} citazioni non valide")
+                bits.append(f"{s.citations_invalid} invalid citations")
             if s.unsupported_numbers:
-                bits.append("percentuali non verificate: " + ", ".join(s.unsupported_numbers))
+                bits.append("unverified percentages: " + ", ".join(s.unsupported_numbers))
             if s.error:
-                bits.append(f"errore: {s.error}")
+                bits.append(f"error: {s.error}")
             screen.append(f"- **{s.date} · {MODE_LABEL.get(s.mode, s.mode)}** — " + "; ".join(bits))
         screen.append("")
 
@@ -113,7 +113,7 @@ def main() -> None:
                         s.steps, s.tool_calls, s.prompt_tokens, s.output_tokens, s.error])
 
     print("\n".join(screen))
-    print("Salvato in evaluation/results.md e results.csv")
+    print("Saved to evaluation/results.md and results.csv")
 
 
 if __name__ == "__main__":

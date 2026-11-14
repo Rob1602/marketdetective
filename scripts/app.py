@@ -1,11 +1,9 @@
-"""Interfaccia web di MarketDetective.
+"""MarketDetective web interface.
 
-Si avvia con:
+Start it with:
     streamlit run scripts/app.py
 
-Si apre nel browser. Tre schede: l'investigazione di un evento, i risultati dell'esperimento
-e lo storico delle esecuzioni già fatte. I testi mostrati all'utente sono in inglese, come
-il resto del repository.
+It opens in the browser. Two tabs: investigating an event, and the experiment results.
 """
 
 from __future__ import annotations
@@ -43,7 +41,7 @@ def get_index(news_dir: str, embedding_model: str):
 
 
 def pct_to_float(value) -> float:
-    """'-5.32%' -> -5.32. Restituisce 0.0 se il valore non è una percentuale."""
+    """'-5.32%' -> -5.32. Returns 0.0 if the value is not a percentage."""
     try:
         return float(str(value).replace("%", "").replace("+", "").strip())
     except (TypeError, ValueError):
@@ -69,8 +67,8 @@ with st.sidebar:
     st.caption("The agent runs the event study and chooses its own searches. The baseline does a "
                "single retrieval and never sees a number.")
 
-    # Modello e domanda vengono dalla configurazione: l'esperimento richiede che siano
-    # identici su tutti gli eventi. Per variarli c'è scripts/ask.py (--model, --question).
+    # Model and question come from the configuration: the experiment needs them identical
+    # across every event. To vary them use scripts/ask.py (--model, --question).
     model = cfg.llm.get("model", "qwen3:8b")
 
     run_clicked = st.button("Investigate", type="primary", use_container_width=True)
@@ -159,7 +157,7 @@ def show_report(result, news_by_id: dict) -> None:
             st.error(f"Error: {result.error}")
 
 
-# -------------------------------------------------------------- investigazione
+# ------------------------------------------------------------- investigation
 
 with tab_run:
     if not run_clicked:
@@ -208,7 +206,7 @@ with tab_run:
             st.error(f"{type(e).__name__}: {e}")
             st.stop()
 
-        # Mappa id -> notizia, per mostrare le citazioni per esteso.
+        # Map id -> news item, so citations can be shown in full.
         result_news = {i: {"source": it.source, "published": it.published, "headline": it.headline}
                        for i, it in toolbox.seen_news.items()}
 
@@ -231,7 +229,7 @@ with tab_run:
         st.caption(f"Saved to `runs/{base.name}.md`")
 
 
-# ----------------------------------------------------------------- esperimento
+# ------------------------------------------------------------------ experiment
 
 with tab_experiment:
     st.header("Does the agentic design earn its cost?")

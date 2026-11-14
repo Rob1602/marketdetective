@@ -1,11 +1,11 @@
-"""Chiedi all'agente di spiegare un movimento.
+"""Ask the agent to explain a move.
 
-Esempi:
-    python scripts/ask.py NVDA 2026-11-09                 # agente con strumenti
-    python scripts/ask.py NVDA 2026-11-09 --mode rag      # baseline: solo RAG, niente strumenti
+Examples:
+    python scripts/ask.py NVDA 2026-11-09                 # agent, with tools
+    python scripts/ask.py NVDA 2026-11-09 --mode rag      # baseline: RAG only, no tools
     python scripts/ask.py NVDA 2026-11-09 --question "Was the drop caused by the CEO scandal?"
 
-Il report viene stampato e salvato in runs/ (Markdown da leggere, JSON per la valutazione).
+The report is printed and saved to runs/ (Markdown to read, JSON for the evaluation).
 """
 
 from __future__ import annotations
@@ -42,23 +42,23 @@ def save(result, runs_dir: Path) -> Path:
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="Investiga un movimento di borsa")
+    ap = argparse.ArgumentParser(description="Investigate a stock price move")
     ap.add_argument("ticker")
     ap.add_argument("date")
     ap.add_argument("--mode", choices=["agent", "rag"], default="agent")
     ap.add_argument("--question", default=None)
-    ap.add_argument("--model", default=None, help="es. qwen3:14b (default: quello in config.yaml)")
+    ap.add_argument("--model", default=None, help="e.g. qwen3:14b (default: the one in config.yaml)")
     args = ap.parse_args()
 
     cfg = load_config()
     agent = build_agent(cfg, args.model)
-    print(f"Modalità {args.mode}, modello {agent.model}\n")
+    print(f"Mode {args.mode}, model {agent.model}\n")
     run = agent.investigate if args.mode == "agent" else agent.rag_baseline
     result = run(cfg.ticker(args.ticker).symbol, args.date, args.question)
 
     print("\n" + result.to_markdown())
     base = save(result, PROJECT_ROOT / "runs")
-    print(f"\nSalvato in {base.relative_to(PROJECT_ROOT)}.md e .json")
+    print(f"\nSaved to {base.relative_to(PROJECT_ROOT)}.md and .json")
 
 
 if __name__ == "__main__":

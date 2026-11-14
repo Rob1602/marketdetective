@@ -1,11 +1,10 @@
-"""Trova i giorni in cui un titolo si è mosso in modo anomalo: i candidati eventi da investigare.
+"""Find the days on which a stock moved unusually: the candidate events to investigate.
 
-Esempio:
-    python scripts/find_events.py NVDA            # ultimi 12 mesi, 10 eventi più forti
+Examples:
+    python scripts/find_events.py NVDA            # last 12 months, 10 strongest moves
     python scripts/find_events.py NVDA --months 6 --top 5
 
-Le notizie gratuite di Finnhub coprono un periodo limitato (circa un anno),
-quindi conviene scegliere eventi recenti.
+Finnhub's free news coverage goes back about a year, so recent events work best.
 """
 
 from __future__ import annotations
@@ -24,12 +23,12 @@ from marketdetective.stats import compute_returns, scan_anomalies  # noqa: E402
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="Trova i giorni di movimento anomalo di un titolo")
+    ap = argparse.ArgumentParser(description="Find the days a stock moved unusually")
     ap.add_argument("ticker")
-    ap.add_argument("--months", type=int, default=12, help="quanti mesi indietro cercare (default 12)")
-    ap.add_argument("--top", type=int, default=10, help="quanti eventi mostrare (default 10)")
+    ap.add_argument("--months", type=int, default=12, help="how many months back to search (default 12)")
+    ap.add_argument("--top", type=int, default=10, help="how many events to show (default 10)")
     ap.add_argument("--quiet", action="store_true",
-                    help="mostra invece i giorni PIU' tranquilli, da usare come controllo negativo")
+                    help="show the QUIETEST days instead, to use as a negative control")
     args = ap.parse_args()
 
     cfg = load_config()
@@ -41,22 +40,22 @@ def main() -> None:
     start = (rets.index[-1] - pd.DateOffset(months=args.months)).strftime("%Y-%m-%d")
     found = scan_anomalies(rets, cfg.event_study, start=start, only_anomalous=not args.quiet)
     if found.empty:
-        print(f"Nessun dato per {info.symbol} negli ultimi {args.months} mesi.")
+        print(f"No data for {info.symbol} over the last {args.months} months.")
         return
 
     order = found["t"].abs().sort_values(ascending=bool(args.quiet))
     found = found.reindex(order.index).head(args.top)
-    kind = "giorni più tranquilli" if args.quiet else "movimenti anomali"
-    print(f"{info.name} ({info.symbol}): {kind} negli ultimi {args.months} mesi\n")
-    print(f"{'data':<12}{'rendimento':>12}{'anomalo':>10}{'t':>8}   driver principale")
+    kind = "quietest days" if args.quiet else "anomalous moves"
+    print(f"{info.name} ({info.symbol}): {kind} over the last {args.months} months\n")
+    print(f"{'date':<12}{'return':>12}{'abnormal':>10}{'t':>8}   main driver")
     for _, r in found.iterrows():
         print(f"{r['date']:<12}{r['return']:>+12.2%}{r['abnormal']:>+10.2%}{r['t']:>8.2f}   {r['driver']}")
 
     if args.quiet:
-        print("\nUsa uno di questi come controllo negativo: il sistema NON deve inventare una causa.")
+        print("\nUse one of these as a negative control: the system must NOT invent a cause.")
     else:
-        print("\nScegli le date, preferibilmente con driver 'specifico dell'azienda', e lancia tutto con:")
-        print(f"  python scripts/run_all.py {info.symbol} DATA1 DATA2 DATA3")
+        print("\nPick the dates, preferably with a company-specific driver, then run everything with:")
+        print(f"  python scripts/run_all.py {info.symbol} DATE1 DATE2 DATE3")
 
 
 if __name__ == "__main__":

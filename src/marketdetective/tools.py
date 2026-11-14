@@ -1,11 +1,9 @@
-"""Gli strumenti che l'LLM può chiamare (function calling).
+"""The tools the LLM can call (function calling).
 
-Principio: i numeri e i documenti vengono SEMPRE dal codice. Il modello decide quale
-strumento chiamare e con quali argomenti, poi interpreta il risultato.
+Principle: numbers and documents always come from code. The model decides which tool to call and
+with which arguments, then interprets the result.
 
-Ogni strumento ha:
-- una funzione Python che lo esegue;
-- uno schema JSON che lo descrive al modello (nome, scopo, argomenti).
+Each tool has a Python function that runs it and a JSON schema that describes it to the model.
 """
 
 from __future__ import annotations
@@ -71,7 +69,7 @@ def _pct(x: float) -> str:
 
 
 class Toolbox:
-    """Esegue gli strumenti e tiene traccia dei documenti mostrati al modello (per verificare le citazioni)."""
+    """Runs the tools and tracks which documents the model was shown, so citations can be checked."""
 
     def __init__(self, cfg: Config, index: NewsIndex, store: PriceStore | None = None):
         self.cfg = cfg
@@ -110,7 +108,7 @@ class Toolbox:
             "t_stat": round(res.day0_t, 2),
             "p_value": round(res.day0_p, 4),
             "is_anomalous": bool(res.is_anomalous),
-            "main_driver": {"mercato": "market", "settore": "sector"}.get(d.dominant_driver, "company-specific"),
+            "main_driver": d.dominant_driver,
             "cumulative_abnormal_return_days_-1_to_+1": _pct(res.car),
             "notes": res.notes,
         }
@@ -133,6 +131,6 @@ class Toolbox:
         }
 
     def is_valid_citation(self, news_id: str, ticker: str, date: str) -> bool:
-        """Una citazione è valida se il modello l'ha davvero ricevuta e se è uscita prima della chiusura."""
+        """A citation is valid if the model actually received it and it was published before the close."""
         it = self.seen_news.get(news_id)
         return bool(it and it.ticker == ticker.upper() and it.published_ts <= market_close_utc(date))
