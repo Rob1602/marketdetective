@@ -1,0 +1,56 @@
+{
+  "mode": "rag",
+  "model": "qwen3:8b",
+  "ticker": "NVDA",
+  "date": "2026-04-30",
+  "question": "Why did NVDA stock move on 2026-04-30? Was the move unusual, and what caused it?",
+  "numbers": null,
+  "report": {
+    "supported_causes": [
+      {
+        "cause": "Rotation concerns",
+        "evidence_ids": [
+          "fh-140118994"
+        ]
+      }
+    ],
+    "hypotheses": [
+      "Broader semiconductor industry selloff due to AI spending concerns and geopolitical risks (from prior day's news)",
+      "Potential false breakout reversal",
+      "Competitive pressure from AMD's rising performance",
+      "Share buyback activity influencing investor sentiment"
+    ],
+    "conclusion": "The NVDA stock move on 2026-04-30 was a 4% decline, primarily driven by rotation concerns as investors shifted focus from AI-driven growth narratives. This move was unusual given the stock's 27% one-month rally, but it aligns with broader market volatility. The decline was not directly caused by the prior day's semiconductor selloff (AI/geopolitical risks) or AMD competition, though these factors may have contributed to the broader market context.",
+    "confidence": "medium"
+  },
+  "citations_valid": [
+    "fh-140118994"
+  ],
+  "citations_invalid": [],
+  "steps": [
+    {
+      "kind": "tool",
+      "name": "retrieve",
+      "args": {
+        "query": "Why did NVDA stock move on 2026-04-30? Was the move unusual, and what caused it?"
+      },
+      "seconds": 0.0,
+      "prompt_tokens": 0,
+      "output_tokens": 0,
+      "summary": "8 news"
+    },
+    {
+      "kind": "llm",
+      "name": "final_report",
+      "args": {},
+      "seconds": 284.2612319998443,
+      "prompt_tokens": 1030,
+      "output_tokens": 2037,
+      "summary": ""
+    }
+  ],
+  "total_seconds": 284.6357783752028,
+  "error": "",
+  "prompt_tokens": 1030,
+  "output_tokens": 2037
+}

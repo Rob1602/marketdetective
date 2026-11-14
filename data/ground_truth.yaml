@@ -1,0 +1,117 @@
+# La causa vera di ogni evento, ricavata leggendo i titoli pubblicati PRIMA della chiusura
+# di borsa del giorno dell'evento (data/review/headlines.txt).
+# Serve per valutare le risposte dell'agente e della baseline RAG.
+#
+# key_terms: gruppi di sinonimi. Una risposta è considerata corretta se contiene
+# almeno un termine di OGNI gruppo. Meno gruppi = criterio più indulgente.
+
+events:
+
+  - ticker: NVDA
+    date: "2026-02-02"
+    expected_driver: company-specific
+    cause: >
+      Reports that NVIDIA's $100bn investment in OpenAI had been paused or hit internal snags,
+      compounded by a Reuters report that OpenAI was unsatisfied with some NVIDIA chips and was
+      looking at alternatives.
+    key_terms:
+      - [openai]
+      - [pause, paused, snag, doubt, stall, delay, concern, funding]
+
+  - ticker: NVDA
+    date: "2026-04-27"
+    expected_driver: company-specific
+    cause: >
+      No single discrete catalyst. The rally to record highs is attributed to AI build-out momentum
+      ahead of Big Tech earnings and to bullish analyst commentary (BofA calling the stock
+      undervalued by at least 30%).
+    notes: >
+      Ambiguous case on purpose: a good answer should attribute the move to momentum and sentiment
+      rather than invent a specific event. The CAO retirement filed that afternoon is routine and
+      is not the cause.
+    key_terms:
+      - [momentum, rally, record, buildout, build-out, capex, analyst, sentiment, undervalued, optimism]
+
+  - ticker: NVDA
+    date: "2026-04-30"
+    expected_driver: company-specific
+    cause: >
+      Concerns about rising competition from custom AI chips built by hyperscalers such as Google
+      and Amazon, together with a rotation of investors out of NVIDIA.
+    key_terms:
+      - [competition, custom chip, google, amazon, hyperscaler, rotation]
+
+  - ticker: NVDA
+    date: "2026-06-01"
+    expected_driver: company-specific
+    cause: >
+      Product announcements at Computex 2026: NVIDIA entered the PC chip market with the RTX Spark
+      superchip and the Vera CPU, which sent Intel, AMD and Qualcomm lower and NVIDIA higher.
+    key_terms:
+      - [computex, pc, new chip, rtx, spark, vera, product, launch, unveil, announce]
+
+  - ticker: NVDA
+    date: "2026-07-15"
+    expected_driver: none
+    cause: >
+      CONTROL CASE. No anomalous move: the stock rose 0.33% in line with the market (t = 0.00).
+      A correct answer states that nothing specific needs explaining and that the news does not
+      identify a cause.
+    notes: >
+      Negative control. Any confident narrative here is a failure, however plausible it sounds.
+      Key terms are whole phrases on purpose: single words like "no" would match almost any text.
+      The list was extended after reading both reports by hand: the agent answered correctly with
+      "no company-specific news" and "statistically insignificant", wordings the first version did
+      not cover and scored as a failure. The manual read is authoritative; the lexical check is a
+      screen and was audited against it.
+    key_terms:
+      - [no company-specific, no company specific, no specific, insignificant, not significant,
+         not anomalous, not unusual, no clear, no single, no evidence, no identifiable, no direct,
+         nothing specific, does not explain, do not explain, insufficient evidence,
+         entirely explained by, within its normal range]
+
+  - ticker: NVDA
+    date: "2026-07-27"
+    expected_driver: company-specific
+    cause: >
+      Investor concern over circular financing: reports that NVIDIA was in talks to provide a
+      backstop of up to $250bn for OpenAI's infrastructure triggered balance-sheet worries and
+      dragged chip stocks lower.
+    key_terms:
+      - [circular, backstop, financing, balance sheet, spending, openai]
+
+  - ticker: NVDA
+    date: "2026-08-27"
+    expected_driver: company-specific
+    cause: >
+      Reaction to the Q2 results released after the close on 2026-08-26: earnings and revenue above
+      estimates and Q3 guidance above expectations; analysts raised their price targets.
+    key_terms:
+      - [earnings, results, guidance, outlook, beat]
+
+  - ticker: NVDA
+    date: "2026-11-04"
+    expected_driver: company-specific
+    cause: >
+      No clean attribution. Coverage is dominated by a Bloomberg report that NVIDIA's Chinese
+      customers would receive only ~1% of the $70bn of RTX chips they had ordered, but no headline
+      ties the fall to it. The only headline that explicitly links the move to a cause attributes it
+      to the post-election selloff ("Tech, AI Stocks Split After Democratic Sweep ... Nvidia Tank"),
+      and another reports the stock rising on the same day.
+    notes: >
+      Weakest event of the set, kept on purpose. Verified by hand: the China story is widely
+      reported but never as the reason for the drop, so either attribution is accepted and a
+      hedged answer is the honest one.
+    key_terms:
+      - [china, shortfall, export, licence, license, regulation, election, data center, data centre, crackdown]
+
+  - ticker: NVDA
+    date: "2026-11-09"
+    expected_driver: company-specific
+    cause: >
+      NVIDIA's board opened an investigation into CEO Jensen Huang over alleged ties to a suspected
+      Chinese spy (Megaspeed probe); shareholders filed a class-action lawsuit. The stock fell while
+      the overall market rose.
+    key_terms:
+      - [huang, ceo]
+      - [investigation, probe, spy, scandal]

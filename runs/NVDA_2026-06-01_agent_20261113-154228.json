@@ -1,0 +1,142 @@
+{
+  "mode": "agent",
+  "model": "qwen3:8b",
+  "ticker": "NVDA",
+  "date": "2026-06-01",
+  "question": "Why did NVDA stock move on 2026-06-01? Was the move unusual, and what caused it?",
+  "numbers": {
+    "ticker": "NVDA",
+    "company": "NVIDIA",
+    "date": "2026-06-01",
+    "benchmarks": {
+      "market": "SPY",
+      "sector": "SOXX"
+    },
+    "day_return": "+6.07%",
+    "explained_by_market": "+0.37%",
+    "explained_by_sector": "+0.06%",
+    "company_specific_abnormal_return": "+5.71%",
+    "t_stat": 3.4,
+    "p_value": 0.0009,
+    "is_anomalous": true,
+    "main_driver": "company-specific",
+    "cumulative_abnormal_return_days_-1_to_+1": "+1.86%",
+    "notes": []
+  },
+  "report": {
+    "supported_causes": [
+      {
+        "cause": "Product announcements at Computex 2026",
+        "evidence_ids": [
+          "fh-140484694",
+          "fh-140487070",
+          "fh-140486500",
+          "fh-140488498",
+          "fh-140491262"
+        ]
+      }
+    ],
+    "hypotheses": [],
+    "conclusion": "The NVDA stock surge on 2026-06-01 was driven by **company-specific product announcements** at Computex 2026, including new AI chips (N1X, RTX Spark) and security technology (NVIDIA DOCA). These innovations reinforced NVIDIA's position in AI infrastructure and personal computing, explaining the **+5.71% abnormal return** (t-stat=3.4, p=0.0009). No earnings or guidance news was found, and the move was **unusual** relative to market/sector trends.",
+    "confidence": "high"
+  },
+  "citations_valid": [
+    "fh-140484694",
+    "fh-140486500",
+    "fh-140487070",
+    "fh-140488498",
+    "fh-140491262"
+  ],
+  "citations_invalid": [],
+  "steps": [
+    {
+      "kind": "llm",
+      "name": "reasoning",
+      "args": {},
+      "seconds": 24.894083708990365,
+      "prompt_tokens": 635,
+      "output_tokens": 347,
+      "summary": ""
+    },
+    {
+      "kind": "tool",
+      "name": "analyze_event",
+      "args": {
+        "ticker": "NVDA",
+        "date": "2026-06-01"
+      },
+      "seconds": 0.02867216686718166,
+      "prompt_tokens": 0,
+      "output_tokens": 0,
+      "summary": "company-specific"
+    },
+    {
+      "kind": "llm",
+      "name": "reasoning",
+      "args": {},
+      "seconds": 20.2875662909355,
+      "prompt_tokens": 1144,
+      "output_tokens": 326,
+      "summary": ""
+    },
+    {
+      "kind": "tool",
+      "name": "search_news",
+      "args": {
+        "date": "2026-06-01",
+        "days_before": 1,
+        "query": "earnings results guidance",
+        "ticker": "NVDA"
+      },
+      "seconds": 0.038418499985709786,
+      "prompt_tokens": 0,
+      "output_tokens": 0,
+      "summary": "5 news"
+    },
+    {
+      "kind": "llm",
+      "name": "reasoning",
+      "args": {},
+      "seconds": 33.070843750145286,
+      "prompt_tokens": 2091,
+      "output_tokens": 476,
+      "summary": ""
+    },
+    {
+      "kind": "tool",
+      "name": "search_news",
+      "args": {
+        "date": "2026-06-01",
+        "days_before": 1,
+        "query": "product announcement Nvidia",
+        "ticker": "NVDA"
+      },
+      "seconds": 0.037649499950930476,
+      "prompt_tokens": 0,
+      "output_tokens": 0,
+      "summary": "5 news"
+    },
+    {
+      "kind": "llm",
+      "name": "reasoning",
+      "args": {},
+      "seconds": 37.53462012507953,
+      "prompt_tokens": 3258,
+      "output_tokens": 496,
+      "summary": ""
+    },
+    {
+      "kind": "llm",
+      "name": "final_report",
+      "args": {},
+      "seconds": 56.2767556658946,
+      "prompt_tokens": 2215,
+      "output_tokens": 726,
+      "summary": ""
+    }
+  ],
+  "total_seconds": 172.17399166710675,
+  "error": "",
+  "prompt_tokens": 9343,
+  "output_tokens": 2371
+}

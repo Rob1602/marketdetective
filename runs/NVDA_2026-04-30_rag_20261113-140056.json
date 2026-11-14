@@ -1,0 +1,62 @@
+{
+  "mode": "rag",
+  "model": "qwen3:8b",
+  "ticker": "NVDA",
+  "date": "2026-04-30",
+  "question": "Why did NVDA stock move on 2026-04-30? Was the move unusual, and what caused it?",
+  "numbers": null,
+  "report": {
+    "supported_causes": [
+      {
+        "cause": "Rotation concerns leading to a 4% decline",
+        "evidence_ids": [
+          "fh-140118994"
+        ]
+      },
+      {
+        "cause": "Continuation of broader semiconductor industry selloff due to AI spending concerns and geopolitical risks",
+        "evidence_ids": [
+          "fh-139927260"
+        ]
+      }
+    ],
+    "hypotheses": [
+      "The 27% one-month rally may have created overbought conditions, leading to a pullback",
+      "Share buybacks and competitive dynamics with AMD could influence investor sentiment",
+      "Market rotation towards other sectors may have pressured NVIDIA's stock"
+    ],
+    "conclusion": "The NVDA stock decline on 2026-04-30 was unusual given its 27% monthly rally, primarily driven by rotation concerns and broader semiconductor sector selloffs. The 4% drop was directly cited in news items, while AI spending and geopolitical risks were contextual factors not explicitly tied to the immediate move.",
+    "confidence": "medium"
+  },
+  "citations_valid": [
+    "fh-139927260",
+    "fh-140118994"
+  ],
+  "citations_invalid": [],
+  "steps": [
+    {
+      "kind": "tool",
+      "name": "retrieve",
+      "args": {
+        "query": "Why did NVDA stock move on 2026-04-30? Was the move unusual, and what caused it?"
+      },
+      "seconds": 0.0,
+      "prompt_tokens": 0,
+      "output_tokens": 0,
+      "summary": "8 news"
+    },
+    {
+      "kind": "llm",
+      "name": "final_report",
+      "args": {},
+      "seconds": 233.39591033314355,
+      "prompt_tokens": 1030,
+      "output_tokens": 2065,
+      "summary": ""
+    }
+  ],
+  "total_seconds": 234.02886379207484,
+  "error": "",
+  "prompt_tokens": 1030,
+  "output_tokens": 2065
+}

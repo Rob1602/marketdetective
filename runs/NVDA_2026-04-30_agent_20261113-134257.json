@@ -1,0 +1,137 @@
+{
+  "mode": "agent",
+  "model": "qwen3:8b",
+  "ticker": "NVDA",
+  "date": "2026-04-30",
+  "question": "Why did NVDA stock move on 2026-04-30? Was the move unusual, and what caused it?",
+  "numbers": {
+    "ticker": "NVDA",
+    "company": "NVIDIA",
+    "date": "2026-04-30",
+    "benchmarks": {
+      "market": "SPY",
+      "sector": "SOXX"
+    },
+    "day_return": "-4.74%",
+    "explained_by_market": "+1.40%",
+    "explained_by_sector": "+0.58%",
+    "company_specific_abnormal_return": "-6.64%",
+    "t_stat": -4.22,
+    "p_value": 0.0,
+    "is_anomalous": true,
+    "main_driver": "company-specific",
+    "cumulative_abnormal_return_days_-1_to_+1": "-10.50%",
+    "notes": []
+  },
+  "report": {
+    "supported_causes": [
+      {
+        "cause": "Analyst warning about hyperscaler custom chips threatening NVIDIA's dominance",
+        "evidence_ids": [
+          "fh-140121082"
+        ]
+      }
+    ],
+    "hypotheses": [
+      "Broader chip sector volatility due to supply constraints and competition",
+      "Impact of TSMC's $56B investment in AI chip production"
+    ],
+    "conclusion": "The NVDA stock decline on 2026-04-30 was unusual (abnormal return of -6.64%, p=0.0) and company-specific. The primary cause was an analyst warning about hyperscalers developing custom chips that could disrupt NVIDIA's dominance (supported by news id fh-140121082). Broader sector concerns, including TSMC's production expansion, contributed to market-wide volatility but were not directly tied to NVDA's performance.",
+    "confidence": "high"
+  },
+  "citations_valid": [
+    "fh-140121082"
+  ],
+  "citations_invalid": [],
+  "steps": [
+    {
+      "kind": "llm",
+      "name": "reasoning",
+      "args": {},
+      "seconds": 31.51642950018868,
+      "prompt_tokens": 635,
+      "output_tokens": 429,
+      "summary": ""
+    },
+    {
+      "kind": "tool",
+      "name": "analyze_event",
+      "args": {
+        "ticker": "NVDA",
+        "date": "2026-04-30"
+      },
+      "seconds": 0.06165808392688632,
+      "prompt_tokens": 0,
+      "output_tokens": 0,
+      "summary": "company-specific"
+    },
+    {
+      "kind": "llm",
+      "name": "reasoning",
+      "args": {},
+      "seconds": 25.3072878329549,
+      "prompt_tokens": 1225,
+      "output_tokens": 292,
+      "summary": ""
+    },
+    {
+      "kind": "tool",
+      "name": "search_news",
+      "args": {
+        "date": "2026-04-30",
+        "days_before": 1,
+        "query": "earnings results guidance",
+        "ticker": "NVDA"
+      },
+      "seconds": 0.2854047091677785,
+      "prompt_tokens": 0,
+      "output_tokens": 0,
+      "summary": "5 news"
+    },
+    {
+      "kind": "llm",
+      "name": "reasoning",
+      "args": {},
+      "seconds": 36.312504375120625,
+      "prompt_tokens": 2111,
+      "output_tokens": 265,
+      "summary": ""
+    },
+    {
+      "kind": "tool",
+      "name": "search_news",
+      "args": {
+        "ticker": "NVDA",
+        "date": "2026-04-30",
+        "days_before": 1,
+        "query": "competition custom chips"
+      },
+      "seconds": 0.03029525000602007,
+      "prompt_tokens": 0,
+      "output_tokens": 0,
+      "summary": "5 news"
+    },
+    {
+      "kind": "llm",
+      "name": "reasoning",
+      "args": {},
+      "seconds": 113.46878133411519,
+      "prompt_tokens": 3165,
+      "output_tokens": 610,
+      "summary": ""
+    },
+    {
+      "kind": "llm",
+      "name": "final_report",
+      "args": {},
+      "seconds": 141.5650553330779,
+      "prompt_tokens": 2247,
+      "output_tokens": 847,
+      "summary": ""
+    }
+  ],
+  "total_seconds": 348.55491679208353,
+  "error": "",
+  "prompt_tokens": 9383,
+  "output_tokens": 2443
+}

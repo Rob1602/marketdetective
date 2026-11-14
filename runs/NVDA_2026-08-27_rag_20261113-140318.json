@@ -1,0 +1,65 @@
+{
+  "mode": "rag",
+  "model": "qwen3:8b",
+  "ticker": "NVDA",
+  "date": "2026-08-27",
+  "question": "Why did NVDA stock move on 2026-08-27? Was the move unusual, and what caused it?",
+  "numbers": null,
+  "report": {
+    "supported_causes": [
+      {
+        "cause": "Nvidia's Q2 earnings report exceeded expectations, leading to a significant stock price increase.",
+        "evidence_ids": [
+          "fh-141330629",
+          "fh-141329681",
+          "fh-141325383"
+        ]
+      },
+      {
+        "cause": "The stock gapped up above key resistance levels on the chart, indicating strong buying pressure.",
+        "evidence_ids": [
+          "fh-141331185"
+        ]
+      }
+    ],
+    "hypotheses": [
+      "The $40 trillion US debt concerns and Fed speech anticipation may have influenced broader market sentiment, indirectly affecting NVDA.",
+      "Michael Burry's comments on undervaluation could have contributed to investor sentiment, though not directly cited as a cause of the price move."
+    ],
+    "conclusion": "The NVDA stock move on 2026-08-27 was unusual, driven primarily by a strong earnings report that exceeded expectations. The 4.7% after-hours gain and gap-up on the chart suggest a significant positive reaction to the results. While broader market factors like Fed speech anticipation and debt concerns were mentioned, they were not directly cited as causes for the stock's movement.",
+    "confidence": "high"
+  },
+  "citations_valid": [
+    "fh-141325383",
+    "fh-141329681",
+    "fh-141330629",
+    "fh-141331185"
+  ],
+  "citations_invalid": [],
+  "steps": [
+    {
+      "kind": "tool",
+      "name": "retrieve",
+      "args": {
+        "query": "Why did NVDA stock move on 2026-08-27? Was the move unusual, and what caused it?"
+      },
+      "seconds": 0.0,
+      "prompt_tokens": 0,
+      "output_tokens": 0,
+      "summary": "8 news"
+    },
+    {
+      "kind": "llm",
+      "name": "final_report",
+      "args": {},
+      "seconds": 109.78691791603342,
+      "prompt_tokens": 933,
+      "output_tokens": 944,
+      "summary": ""
+    }
+  ],
+  "total_seconds": 109.88505191588774,
+  "error": "",
+  "prompt_tokens": 933,
+  "output_tokens": 944
+}

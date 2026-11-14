@@ -1,0 +1,61 @@
+{
+  "mode": "rag",
+  "model": "qwen3:8b",
+  "ticker": "NVDA",
+  "date": "2026-06-01",
+  "question": "Why did NVDA stock move on 2026-06-01? Was the move unusual, and what caused it?",
+  "numbers": null,
+  "report": {
+    "supported_causes": [
+      {
+        "cause": "NVIDIA announced new CPU and PC offerings at its GTC Taipei event, expanding its AI platform and reinforcing its position in AI infrastructure.",
+        "evidence_ids": [
+          "fh-140491262"
+        ]
+      },
+      {
+        "cause": "NVIDIA's CEO unveiled first PC chips at Computex 2026, leading to a strong open for the stock.",
+        "evidence_ids": [
+          "fh-140484694"
+        ]
+      }
+    ],
+    "hypotheses": [
+      "Intel's stock plunge may have indirectly influenced investor sentiment toward NVIDIA, though this is not explicitly stated in the news.",
+      "The stock's movement may have been unusual due to mixed signals from analyst commentary and market reactions, but this is not directly confirmed by the news."
+    ],
+    "conclusion": "The NVDA stock movement on 2026-06-01 was likely driven by positive announcements about new AI and PC offerings, which supported a price increase. However, conflicting reports about recent declines and market reactions suggest the move may have been influenced by mixed factors. The news does not explicitly confirm whether the movement was unusual compared to historical trends.",
+    "confidence": "medium"
+  },
+  "citations_valid": [
+    "fh-140484694",
+    "fh-140491262"
+  ],
+  "citations_invalid": [],
+  "steps": [
+    {
+      "kind": "tool",
+      "name": "retrieve",
+      "args": {
+        "query": "Why did NVDA stock move on 2026-06-01? Was the move unusual, and what caused it?"
+      },
+      "seconds": 0.0,
+      "prompt_tokens": 0,
+      "output_tokens": 0,
+      "summary": "8 news"
+    },
+    {
+      "kind": "llm",
+      "name": "final_report",
+      "args": {},
+      "seconds": 111.1583383330144,
+      "prompt_tokens": 1028,
+      "output_tokens": 1579,
+      "summary": ""
+    }
+  ],
+  "total_seconds": 111.19443058408797,
+  "error": "",
+  "prompt_tokens": 1028,
+  "output_tokens": 1579
+}

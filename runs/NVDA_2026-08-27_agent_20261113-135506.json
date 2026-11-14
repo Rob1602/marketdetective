@@ -1,0 +1,120 @@
+{
+  "mode": "agent",
+  "model": "qwen3:8b",
+  "ticker": "NVDA",
+  "date": "2026-08-27",
+  "question": "Why did NVDA stock move on 2026-08-27? Was the move unusual, and what caused it?",
+  "numbers": {
+    "ticker": "NVDA",
+    "company": "NVIDIA",
+    "date": "2026-08-27",
+    "benchmarks": {
+      "market": "SPY",
+      "sector": "SOXX"
+    },
+    "day_return": "+8.38%",
+    "explained_by_market": "+1.06%",
+    "explained_by_sector": "+0.14%",
+    "company_specific_abnormal_return": "+7.24%",
+    "t_stat": 3.98,
+    "p_value": 0.0001,
+    "is_anomalous": true,
+    "main_driver": "company-specific",
+    "cumulative_abnormal_return_days_-1_to_+1": "+1.73%",
+    "notes": []
+  },
+  "report": {
+    "supported_causes": [
+      {
+        "cause": "Q2 Earnings Report and Guidance",
+        "evidence_ids": [
+          "fh-141326849",
+          "fh-141327271",
+          "fh-141323834",
+          "fh-141329549"
+        ]
+      }
+    ],
+    "hypotheses": [
+      "Potential impact from broader AI demand trends (not directly cited in news)",
+      "Valuation concerns may have capped returns (mentioned in SeekingAlpha but not confirmed by news)"
+    ],
+    "conclusion": "The NVDA stock surge on 2026-08-27 was driven by company-specific news related to Q2 earnings, guidance, and AI demand. The abnormal return of +7.24% (t-stat 3.98, p-value 0.0001) was primarily explained by positive surprises in data center results and forward-looking statements. No news directly cited competition, products, or regulatory issues. The move was unusual relative to market and sector trends.",
+    "confidence": "high"
+  },
+  "citations_valid": [
+    "fh-141323834",
+    "fh-141326849",
+    "fh-141327271",
+    "fh-141329549"
+  ],
+  "citations_invalid": [],
+  "steps": [
+    {
+      "kind": "llm",
+      "name": "reasoning",
+      "args": {},
+      "seconds": 31.67955237510614,
+      "prompt_tokens": 635,
+      "output_tokens": 427,
+      "summary": ""
+    },
+    {
+      "kind": "tool",
+      "name": "analyze_event",
+      "args": {
+        "ticker": "NVDA",
+        "date": "2026-08-27"
+      },
+      "seconds": 0.027333540841937065,
+      "prompt_tokens": 0,
+      "output_tokens": 0,
+      "summary": "company-specific"
+    },
+    {
+      "kind": "llm",
+      "name": "reasoning",
+      "args": {},
+      "seconds": 29.60203104210086,
+      "prompt_tokens": 1225,
+      "output_tokens": 331,
+      "summary": ""
+    },
+    {
+      "kind": "tool",
+      "name": "search_news",
+      "args": {
+        "query": "earnings results guidance",
+        "ticker": "NVDA",
+        "date": "2026-08-27",
+        "days_before": 2
+      },
+      "seconds": 0.5409905000124127,
+      "prompt_tokens": 0,
+      "output_tokens": 0,
+      "summary": "5 news"
+    },
+    {
+      "kind": "llm",
+      "name": "reasoning",
+      "args": {},
+      "seconds": 115.42927433317527,
+      "prompt_tokens": 2147,
+      "output_tokens": 646,
+      "summary": ""
+    },
+    {
+      "kind": "llm",
+      "name": "final_report",
+      "args": {},
+      "seconds": 97.23760929191485,
+      "prompt_tokens": 1385,
+      "output_tokens": 619,
+      "summary": ""
+    }
+  ],
+  "total_seconds": 274.5245437079575,
+  "error": "",
+  "prompt_tokens": 5392,
+  "output_tokens": 2023
+}

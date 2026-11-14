@@ -1,0 +1,45 @@
+# Configurazione di MarketDetective.
+# Modifica questo file invece del codice: ticker, benchmark e parametri.
+
+llm:
+  provider: ollama
+  model: qwen3:8b
+  base_url: http://localhost:11434
+  temperature: 0.0
+
+# Titoli da analizzare. Per ognuno: indice di mercato ed ETF di settore di riferimento.
+tickers:
+  NVDA:
+    name: NVIDIA
+    market: SPY            # S&P 500
+    sector: SOXX           # semiconduttori
+  # Per aggiungere un titolo, ad esempio Apple:
+  # AAPL:
+  #   name: Apple
+  #   market: SPY
+  #   sector: XLK          # tecnologia
+
+data:
+  start: "2018-01-01"
+  cache_dir: data/prices
+
+# Parametri dell'event study (in giorni di borsa).
+event_study:
+  estimation_window: 120   # giorni usati per stimare alfa e beta
+  gap: 10                  # giorni di distacco tra stima ed evento
+  event_window: [-1, 1]    # dal giorno prima al giorno dopo l'evento
+  vol_window: 20           # finestra per la volatilità rolling
+  z_threshold: 2.0         # |t| oltre cui un movimento è considerato anomalo
+
+# Notizie: scaricate da Finnhub e salvate in un archivio locale.
+# La chiave NON va scritta qui: si legge dalla variabile d'ambiente FINNHUB_API_KEY.
+news:
+  archive_dir: data/news
+  days_before: 3           # scarica notizie da 3 giorni prima dell'evento...
+  days_after: 2            # ...fino a 2 giorni dopo (servono a te per capire la causa;
+                           #    il RAG mostra al modello solo quelle fino al giorno dell'evento)
+
+# RAG: embedding calcolati in locale con Ollama.
+rag:
+  embedding_model: nomic-embed-text
+  top_k: 5

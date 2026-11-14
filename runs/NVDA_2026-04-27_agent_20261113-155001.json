@@ -1,0 +1,174 @@
+{
+  "mode": "agent",
+  "model": "qwen3:8b",
+  "ticker": "NVDA",
+  "date": "2026-04-27",
+  "question": "Why did NVDA stock move on 2026-04-27? Was the move unusual, and what caused it?",
+  "numbers": {
+    "ticker": "NVDA",
+    "company": "NVIDIA",
+    "date": "2026-04-27",
+    "benchmarks": {
+      "market": "SPY",
+      "sector": "SOXX"
+    },
+    "day_return": "+3.93%",
+    "explained_by_market": "+0.23%",
+    "explained_by_sector": "-0.59%",
+    "company_specific_abnormal_return": "+4.37%",
+    "t_stat": 2.79,
+    "p_value": 0.0062,
+    "is_anomalous": true,
+    "main_driver": "company-specific",
+    "cumulative_abnormal_return_days_-1_to_+1": "+6.59%",
+    "notes": []
+  },
+  "report": {
+    "supported_causes": [
+      {
+        "cause": "Indirect AI ecosystem momentum",
+        "evidence_ids": [
+          "fh-139906761"
+        ]
+      },
+      {
+        "cause": "NVIDIA's AI hardware adoption by third-party companies",
+        "evidence_ids": [
+          "fh-139903478"
+        ]
+      },
+      {
+        "cause": "Strategic AI partnerships",
+        "evidence_ids": [
+          "fh-139903862"
+        ]
+      }
+    ],
+    "hypotheses": [
+      "Broader AI sector optimism driving demand for NVIDIA's technology",
+      "Expanded Adobe-WPP-NVIDIA partnership influencing market sentiment (id: fh-139899617)"
+    ],
+    "conclusion": "The 3.93% surge in NVDA on 2026-04-27 was primarily driven by indirect factors related to AI adoption and strategic partnerships, rather than direct company-specific news. Supported causes include third-party AI adoption, sector-wide AI momentum, and NVIDIA's partnerships. Hypotheses involve broader AI sector trends and potential partnership impacts. Further analysis of NVIDIA's Q1 2026 earnings or product roadmap would clarify direct catalysts.",
+    "confidence": "medium"
+  },
+  "citations_valid": [
+    "fh-139903478",
+    "fh-139903862",
+    "fh-139906761"
+  ],
+  "citations_invalid": [],
+  "steps": [
+    {
+      "kind": "llm",
+      "name": "reasoning",
+      "args": {},
+      "seconds": 35.20586279104464,
+      "prompt_tokens": 635,
+      "output_tokens": 427,
+      "summary": ""
+    },
+    {
+      "kind": "tool",
+      "name": "analyze_event",
+      "args": {
+        "date": "2026-04-27",
+        "ticker": "NVDA"
+      },
+      "seconds": 0.01976695889607072,
+      "prompt_tokens": 0,
+      "output_tokens": 0,
+      "summary": "company-specific"
+    },
+    {
+      "kind": "llm",
+      "name": "reasoning",
+      "args": {},
+      "seconds": 30.161683625075966,
+      "prompt_tokens": 1225,
+      "output_tokens": 356,
+      "summary": ""
+    },
+    {
+      "kind": "tool",
+      "name": "search_news",
+      "args": {
+        "query": "earnings results guidance",
+        "date": "2026-04-27",
+        "ticker": "NVDA",
+        "days_before": 1
+      },
+      "seconds": 0.04421049985103309,
+      "prompt_tokens": 0,
+      "output_tokens": 0,
+      "summary": "5 news"
+    },
+    {
+      "kind": "llm",
+      "name": "reasoning",
+      "args": {},
+      "seconds": 35.2730708331801,
+      "prompt_tokens": 2325,
+      "output_tokens": 341,
+      "summary": ""
+    },
+    {
+      "kind": "tool",
+      "name": "search_news",
+      "args": {
+        "date": "2026-04-27",
+        "days_before": 1,
+        "query": "product launches ai advancements",
+        "ticker": "NVDA"
+      },
+      "seconds": 0.04570916714146733,
+      "prompt_tokens": 0,
+      "output_tokens": 0,
+      "summary": "5 news"
+    },
+    {
+      "kind": "llm",
+      "name": "reasoning",
+      "args": {},
+      "seconds": 42.643850417109206,
+      "prompt_tokens": 3393,
+      "output_tokens": 437,
+      "summary": ""
+    },
+    {
+      "kind": "tool",
+      "name": "search_news",
+      "args": {
+        "date": "2026-04-27",
+        "days_before": 1,
+        "query": "management changes regulatory issues",
+        "ticker": "NVDA"
+      },
+      "seconds": 0.04073516698554158,
+      "prompt_tokens": 0,
+      "output_tokens": 0,
+      "summary": "5 news"
+    },
+    {
+      "kind": "llm",
+      "name": "reasoning",
+      "args": {},
+      "seconds": 104.58491866686381,
+      "prompt_tokens": 3958,
+      "output_tokens": 932,
+      "summary": ""
+    },
+    {
+      "kind": "llm",
+      "name": "final_report",
+      "args": {},
+      "seconds": 93.9239345418755,
+      "prompt_tokens": 3272,
+      "output_tokens": 789,
+      "summary": ""
+    }
+  ],
+  "total_seconds": 341.9463083751034,
+  "error": "",
+  "prompt_tokens": 14808,
+  "output_tokens": 3282
+}
