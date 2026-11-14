@@ -1,5 +1,5 @@
 # MarketDetective configuration.
-# Edit this file rather than the code: tickers, benchmarks and parameters.
+# !!!!! Edit this file rather than the code: tickers, benchmarks and parameters.
 
 llm:
   provider: ollama
