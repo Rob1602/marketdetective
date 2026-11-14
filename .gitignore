@@ -15,3 +15,7 @@ data/news/embeddings_*.npz
 
 # file di lettura generati da download_news.py
 data/review/
+
+# cartelle create dai pacchetti installati
+.agents/
+.claude/
