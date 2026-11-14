@@ -7,7 +7,6 @@ Esempi:
 Produce:
     evaluation/results.md           la tabella di confronto, da incollare nel README
     evaluation/results.csv          gli stessi dati per Excel
-    evaluation/manual_review.csv    griglia da compilare a mano con il tuo giudizio
 """
 
 from __future__ import annotations
@@ -113,16 +112,8 @@ def main() -> None:
                         len(s.unsupported_numbers), s.n_hypotheses, s.confidence, round(s.seconds),
                         s.steps, s.tool_calls, s.prompt_tokens, s.output_tokens, s.error])
 
-    manual = out_dir / "manual_review.csv"
-    if not manual.exists():      # non sovrascrive i giudizi già inseriti
-        with open(manual, "w", newline="", encoding="utf-8-sig") as f:
-            w = csv.writer(f, delimiter=";")
-            w.writerow(["event", "mode", "quality_1_5", "cause_correct_yes_no", "notes"])
-            for s in scores:
-                w.writerow([s.date, s.mode, "", "", ""])
-
     print("\n".join(screen))
-    print("Salvato in evaluation/results.md, results.csv e manual_review.csv")
+    print("Salvato in evaluation/results.md e results.csv")
 
 
 if __name__ == "__main__":
