@@ -1,0 +1,150 @@
+{
+  "mode": "agent",
+  "model": "qwen3:8b",
+  "ticker": "NVDA",
+  "date": "2026-11-09",
+  "question": "Why did NVDA stock move on 2026-11-09? Was the move unusual, and what caused it?",
+  "numbers": {
+    "ticker": "NVDA",
+    "company": "NVIDIA",
+    "date": "2026-11-09",
+    "benchmarks": {
+      "market": "SPY",
+      "sector": "SOXX"
+    },
+    "day_return": "-4.36%",
+    "explained_by_market": "+3.94%",
+    "explained_by_sector": "+0.88%",
+    "company_specific_abnormal_return": "-9.16%",
+    "t_stat": -5.09,
+    "p_value": 0.0,
+    "is_anomalous": true,
+    "main_driver": "company-specific",
+    "cumulative_abnormal_return_days_-1_to_+1": "-12.51%",
+    "notes": []
+  },
+  "report": {
+    "supported_causes": [
+      {
+        "cause": "Jensen Huang Spy Allegations",
+        "evidence_ids": [
+          "fh-143647877",
+          "fh-143651365",
+          "fh-143651816",
+          "fh-143658298",
+          "fh-143659214"
+        ]
+      },
+      {
+        "cause": "Geopolitical Tensions and Export Restrictions",
+        "evidence_ids": [
+          "fh-143647877",
+          "fh-143651365",
+          "fh-143651816"
+        ]
+      }
+    ],
+    "hypotheses": [],
+    "conclusion": "The NVDA stock decline on 2026-11-09 was **unusual** and **company-specific**, with a **-9.16% abnormal return** (t-stat -5.09, p-value 0.0). The move was driven by **Jensen Huang spy allegations** and **geopolitical tensions** related to China export restrictions. These factors triggered investor concerns about regulatory risks and geopolitical exposure, leading to a sharp decline. No earnings or product-related news directly caused the move.",
+    "confidence": "high"
+  },
+  "citations_valid": [
+    "fh-143647877",
+    "fh-143651365",
+    "fh-143651816",
+    "fh-143658298",
+    "fh-143659214"
+  ],
+  "citations_invalid": [],
+  "steps": [
+    {
+      "kind": "llm",
+      "name": "reasoning",
+      "args": {},
+      "seconds": 48.827108333818614,
+      "prompt_tokens": 635,
+      "output_tokens": 434,
+      "summary": ""
+    },
+    {
+      "kind": "tool",
+      "name": "analyze_event",
+      "args": {
+        "ticker": "NVDA",
+        "date": "2026-11-09"
+      },
+      "seconds": 0.04997575003653765,
+      "prompt_tokens": 0,
+      "output_tokens": 0,
+      "summary": "company-specific"
+    },
+    {
+      "kind": "llm",
+      "name": "reasoning",
+      "args": {},
+      "seconds": 40.02359537500888,
+      "prompt_tokens": 1230,
+      "output_tokens": 367,
+      "summary": ""
+    },
+    {
+      "kind": "tool",
+      "name": "search_news",
+      "args": {
+        "days_before": 1,
+        "query": "earnings results guidance",
+        "ticker": "NVDA",
+        "date": "2026-11-09"
+      },
+      "seconds": 0.5726267090067267,
+      "prompt_tokens": 0,
+      "output_tokens": 0,
+      "summary": "5 news"
+    },
+    {
+      "kind": "llm",
+      "name": "reasoning",
+      "args": {},
+      "seconds": 52.507246708963066,
+      "prompt_tokens": 2203,
+      "output_tokens": 434,
+      "summary": ""
+    },
+    {
+      "kind": "tool",
+      "name": "search_news",
+      "args": {
+        "date": "2026-11-09",
+        "days_before": 1,
+        "query": "China export restrictions",
+        "ticker": "NVDA"
+      },
+      "seconds": 0.03912575007416308,
+      "prompt_tokens": 0,
+      "output_tokens": 0,
+      "summary": "5 news"
+    },
+    {
+      "kind": "llm",
+      "name": "reasoning",
+      "args": {},
+      "seconds": 64.81207683309913,
+      "prompt_tokens": 3250,
+      "output_tokens": 486,
+      "summary": ""
+    },
+    {
+      "kind": "llm",
+      "name": "final_report",
+      "args": {},
+      "seconds": 105.42786708287895,
+      "prompt_tokens": 2076,
+      "output_tokens": 875,
+      "summary": ""
+    }
+  ],
+  "total_seconds": 312.27245291695,
+  "error": "",
+  "prompt_tokens": 9394,
+  "output_tokens": 2596
+}
